@@ -32,7 +32,7 @@ export function ChatMessageItem({ message, onInitiateSaveNote, user }: ChatMessa
     <div
       className={cn(
         "flex items-start space-x-3 py-3",
-        isUser ? "justify-end" : "justify-start"
+        isUser ? "justify-end animate-slide-in-right" : "justify-start animate-slide-in-left"
       )}
     >
       {!isUser && (
@@ -48,17 +48,16 @@ export function ChatMessageItem({ message, onInitiateSaveNote, user }: ChatMessa
             : "bg-gradient-to-br from-primary to-accent text-primary-foreground rounded-bl-none" // Updated for AI messages
         )}
       >
-        <div className="text-sm">
+        <div className="text-sm animate-content-fade-in">
           {parts.map((part, index) => {
             if (part.startsWith("```")) {
               const codeContent = part.replace(/```(?:[\w-]+)?\n/, "").replace(/\n```$/, "");
               return <CodeBlock key={`${message.id}-code-${index}`} codeContent={codeContent} />;
             }
-            // Ensure text inside AI gradient bubble is readable, might need specific class for text color if primary-foreground isn't enough
             return <FormattedTextRenderer key={`${message.id}-text-${index}`} content={part} className={!isUser ? "text-primary-foreground" : ""} />;
           })}
         </div>
-        <div className="flex justify-between items-center mt-2">
+        <div className="flex justify-between items-center mt-2 animate-content-fade-in" style={{ animationDelay: '0.2s' /* slight delay for footer too */}}>
           <p className={cn(
               "text-xs",
               isUser ? "text-primary-foreground/70" : "text-primary-foreground/80" // Adjusted opacity for AI timestamp
