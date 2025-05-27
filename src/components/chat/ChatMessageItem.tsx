@@ -45,7 +45,7 @@ export function ChatMessageItem({ message, onInitiateSaveNote, user }: ChatMessa
           "max-w-[70%] p-3 rounded-lg shadow-md",
           isUser
             ? "bg-primary text-primary-foreground rounded-br-none"
-            : "bg-card text-card-foreground rounded-bl-none"
+            : "bg-gradient-to-br from-primary to-accent text-primary-foreground rounded-bl-none" // Updated for AI messages
         )}
       >
         <div className="text-sm">
@@ -54,13 +54,14 @@ export function ChatMessageItem({ message, onInitiateSaveNote, user }: ChatMessa
               const codeContent = part.replace(/```(?:[\w-]+)?\n/, "").replace(/\n```$/, "");
               return <CodeBlock key={`${message.id}-code-${index}`} codeContent={codeContent} />;
             }
-            return <FormattedTextRenderer key={`${message.id}-text-${index}`} content={part} />;
+            // Ensure text inside AI gradient bubble is readable, might need specific class for text color if primary-foreground isn't enough
+            return <FormattedTextRenderer key={`${message.id}-text-${index}`} content={part} className={!isUser ? "text-primary-foreground" : ""} />;
           })}
         </div>
         <div className="flex justify-between items-center mt-2">
           <p className={cn(
               "text-xs",
-              isUser ? "text-primary-foreground/70" : "text-muted-foreground"
+              isUser ? "text-primary-foreground/70" : "text-primary-foreground/80" // Adjusted opacity for AI timestamp
             )}>
             {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
@@ -68,7 +69,7 @@ export function ChatMessageItem({ message, onInitiateSaveNote, user }: ChatMessa
             <Button 
               variant="ghost" 
               size="sm" 
-              className="p-1 h-auto text-xs text-muted-foreground hover:text-accent-foreground hover:bg-accent/50"
+              className="p-1 h-auto text-xs text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/20" // Adjusted for contrast on gradient
               onClick={() => onInitiateSaveNote(message.content)}
               title="Simpan ke Catatan"
             >
@@ -91,5 +92,3 @@ export function ChatMessageItem({ message, onInitiateSaveNote, user }: ChatMessa
     </div>
   );
 }
-
-    
