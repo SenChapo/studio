@@ -50,6 +50,9 @@ import { FormattedTextRenderer } from '@/components/shared/FormattedTextRenderer
 import { useMockAuth } from "@/hooks/useMockAuth";
 
 
+const FOLDERS_STORAGE_KEY = 'cunenkFolders';
+const NOTES_STORAGE_KEY = 'cunenkNotes';
+
 export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -81,6 +84,53 @@ export function ChatPage() {
   const [isDeleteFolderConfirmOpen, setIsDeleteFolderConfirmOpen] = useState(false);
   const [folderIdToDelete, setFolderIdToDelete] = useState<string | null>(null);
 
+  // Load data from localStorage on mount
+  useEffect(() => {
+    const storedFoldersRaw = localStorage.getItem(FOLDERS_STORAGE_KEY);
+    if (storedFoldersRaw) {
+      try {
+        const storedFolders = JSON.parse(storedFoldersRaw) as Folder[];
+        setFolders(storedFolders);
+      } catch (error) {
+        console.error("Error parsing stored folders:", error);
+        localStorage.removeItem(FOLDERS_STORAGE_KEY); // Clear corrupted data
+      }
+    }
+
+    const storedNotesRaw = localStorage.getItem(NOTES_STORAGE_KEY);
+    if (storedNotesRaw) {
+      try {
+        const parsedNotes = JSON.parse(storedNotesRaw) as Note[];
+        // Convert string timestamps back to Date objects
+        const notesWithDates = parsedNotes.map(note => ({
+          ...note,
+          timestamp: new Date(note.timestamp),
+          lastEditedTimestamp: note.lastEditedTimestamp ? new Date(note.lastEditedTimestamp) : undefined,
+        }));
+        setNotes(notesWithDates);
+      } catch (error) {
+        console.error("Error parsing stored notes:", error);
+        localStorage.removeItem(NOTES_STORAGE_KEY); // Clear corrupted data
+      }
+    }
+  }, []);
+
+  // Save folders to localStorage whenever they change
+  useEffect(() => {
+    // Only save if folders array is not in its initial empty state due to no loading,
+    // or if there was something in localStorage previously (to allow saving an empty array after deletion)
+    if (folders.length > 0 || localStorage.getItem(FOLDERS_STORAGE_KEY) !== null) {
+       localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(folders));
+    }
+  }, [folders]);
+
+  // Save notes to localStorage whenever they change
+  useEffect(() => {
+    if (notes.length > 0 || localStorage.getItem(NOTES_STORAGE_KEY) !== null) {
+        localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
+    }
+  }, [notes]);
+
 
   useEffect(() => {
     if (folders.length > 0 && !selectedFolderId) {
@@ -99,8 +149,8 @@ export function ChatPage() {
     }
     const newFolder: Folder = { id: crypto.randomUUID(), name: folderName.trim() };
     setFolders(prev => [...prev, newFolder].sort((a, b) => a.name.localeCompare(b.name)));
-    setSelectedFolderId(newFolder.id);
-    if (!selectedFolderForSaving) {
+    setSelectedFolderId(newFolder.id); // Select the new folder
+    if (!selectedFolderForSaving || folders.length === 0) { // If no folder was selected for saving or no folders existed
         setSelectedFolderForSaving(newFolder.id);
     }
     toast({ title: "Sukses", description: `Folder '${newFolder.name}' berhasil ditambahkan.` });
@@ -114,7 +164,9 @@ export function ChatPage() {
     setNoteContentToSave(content);
     const firstFewWords = content.split(/\s+/).slice(0, 5).join(" ");
     setNoteNameToSave(firstFewWords || "Catatan Baru");
-    setSelectedFolderForSaving(selectedFolderId || folders[0]?.id || null);
+    // Default to currently selected folder, or first folder if none selected (or if selected is invalid)
+    const currentValidFolder = folders.find(f => f.id === selectedFolderId);
+    setSelectedFolderForSaving(currentValidFolder ? currentValidFolder.id : (folders[0]?.id || null));
     setIsSaveNoteDialogOpen(true);
   };
 
@@ -129,14 +181,14 @@ export function ChatPage() {
       return;
     }
 
-    const finalNoteName = noteNameToSave.trim() || "Catatan Baru";
+    const finalNoteName = noteNameToSave.trim() || "Catatan Tanpa Judul";
 
     const newNote: Note = {
       id: crypto.randomUUID(),
       folderId: selectedFolderForSaving,
       name: finalNoteName,
       content: noteContentToSave,
-      timestamp: new Date(), // Creation timestamp
+      timestamp: new Date(), 
       // lastEditedTimestamp is initially undefined
     };
     setNotes(prev => [...prev, newNote]);
@@ -205,7 +257,8 @@ export function ChatPage() {
   const handleToggleEditNote = () => {
     if (noteToViewOrEdit) {
       setIsEditingNote(!isEditingNote);
-      if (isEditingNote) {
+      if (isEditingNote) { // Was editing, now viewing
+        // Reset changes if cancelling edit
         setEditedNoteName(noteToViewOrEdit.name);
         setEditedNoteContent(noteToViewOrEdit.content);
       }
@@ -221,10 +274,11 @@ export function ChatPage() {
             ...n,
             name: finalEditedName,
             content: editedNoteContent,
-            lastEditedTimestamp: new Date() // Update last edited timestamp
+            lastEditedTimestamp: new Date() 
           } : n
         )
       );
+      // Update the noteToViewOrEdit state as well to reflect changes immediately in the dialog
       setNoteToViewOrEdit(prev => prev ? {
         ...prev,
         name: finalEditedName,
@@ -247,6 +301,7 @@ export function ChatPage() {
       toast({ title: "Sukses", description: "Catatan berhasil dihapus.", variant: "destructive" });
       setNoteIdToDelete(null);
       setIsDeleteNoteConfirmOpen(false);
+      // If the deleted note was being viewed, close the view/edit dialog
       if (noteToViewOrEdit && noteToViewOrEdit.id === noteIdToDelete) {
         setIsViewNoteDialogOpen(false);
         setNoteToViewOrEdit(null);
@@ -266,26 +321,27 @@ export function ChatPage() {
     if (!folderToDelete) return;
 
     setNotes(prevNotes => prevNotes.filter(n => n.folderId !== folderIdToDelete));
-    setFolders(prevFolders => prevFolders.filter(f => f.id !== folderIdToDelete));
+    setFolders(prevFolders => {
+      const updatedFolders = prevFolders.filter(f => f.id !== folderIdToDelete);
+      // If the deleted folder was selected, select the first available folder or null
+      if (selectedFolderId === folderIdToDelete) {
+        setSelectedFolderId(updatedFolders.length > 0 ? updatedFolders[0].id : null);
+      }
+      if (selectedFolderForSaving === folderIdToDelete) {
+        setSelectedFolderForSaving(updatedFolders.length > 0 ? updatedFolders[0].id : null);
+      }
+      return updatedFolders;
+    });
 
     toast({ title: "Folder Dihapus", description: `Folder '${folderToDelete.name}' dan semua catatannya berhasil dihapus.`, variant: "destructive" });
-
-    if (selectedFolderId === folderIdToDelete) {
-      const remainingFolders = folders.filter(f => f.id !== folderIdToDelete);
-      setSelectedFolderId(remainingFolders.length > 0 ? remainingFolders[0].id : null);
-    }
-    if (selectedFolderForSaving === folderIdToDelete) {
-      const remainingFolders = folders.filter(f => f.id !== folderIdToDelete);
-      setSelectedFolderForSaving(remainingFolders.length > 0 ? remainingFolders[0].id : null);
-    }
-
     setFolderIdToDelete(null);
     setIsDeleteFolderConfirmOpen(false);
   };
 
-  const formatTimestamp = (date: Date | undefined) => {
+  const formatTimestamp = (date: Date | string | undefined) => {
     if (!date) return '';
-    return new Date(date).toLocaleString('id-ID', {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleString('id-ID', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -381,7 +437,7 @@ export function ChatPage() {
             <Button
               type="button"
               onClick={handleConfirmSaveNote}
-              disabled={!selectedFolderForSaving || folders.length === 0}
+              disabled={!selectedFolderForSaving || folders.length === 0 || !noteNameToSave.trim()}
             >
               Simpan
             </Button>
@@ -499,4 +555,3 @@ export function ChatPage() {
     </SidebarProvider>
   );
 }
-
