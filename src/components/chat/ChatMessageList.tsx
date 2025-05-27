@@ -10,10 +10,10 @@ interface ChatMessageListProps {
   messages: ChatMessage[];
   isLoadingAiResponse: boolean;
   loadingText?: string;
-  onInitiateSaveNote?: (content: string) => void; 
+  onInitiateSaveNote?: (content: string) => void;
 }
 
-export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "Lumina sedang berpikir...", onInitiateSaveNote }: ChatMessageListProps) {
+export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "Cunenk sedang berpikir...", onInitiateSaveNote }: ChatMessageListProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -30,16 +30,16 @@ export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "
       {messages.length === 0 && !isLoadingAiResponse ? (
         <div className="h-full flex flex-col items-center justify-center p-4 text-center" ref={viewportRef}>
           <div className="p-8 rounded-lg bg-card shadow-xl max-w-lg border">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="48" 
-              height="48" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="hsl(var(--primary))" 
-              strokeWidth="1.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               className="mx-auto mb-4 opacity-80"
               aria-hidden="true"
             >
@@ -50,7 +50,7 @@ export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "
               <path d="m7 12.5 10 5"/>
               <path d="m7 7.5 10 5"/>
             </svg>
-            <h2 className="text-2xl font-semibold mb-3 text-primary">Selamat Datang di Lumina AI!</h2>
+            <h2 className="text-2xl font-semibold mb-3 text-primary">Selamat Datang di Cunenk AI!</h2>
             <p className="text-muted-foreground text-base">
               Saya adalah asisten virtual Anda. <br />
               Silakan ajukan pertanyaan atau topik yang ingin Anda diskusikan.

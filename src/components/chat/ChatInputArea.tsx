@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, type FormEvent, useRef, useEffect } from "react";
@@ -49,7 +50,7 @@ export function ChatInputArea({ onSendMessage, isLoading }: ChatInputAreaProps) 
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Tanya Lumina AI..."
+        placeholder="Tanya Cunenk AI..."
         className="flex-grow resize-none max-h-40 min-h-[40px] text-base"
         rows={1}
         disabled={isLoading}

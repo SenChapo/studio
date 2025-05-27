@@ -1,6 +1,8 @@
+
 import { useState, useCallback, useEffect } from 'react';
 
 type User = { name: string; avatar: string };
+const localStorageKey = 'cunenkUser';
 
 export const useMockAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -10,7 +12,7 @@ export const useMockAuth = () => {
   useEffect(() => {
     setIsMounted(true);
     // Simulate checking auth status on mount
-    const storedUser = localStorage.getItem('luminaUser');
+    const storedUser = localStorage.getItem(localStorageKey);
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -21,9 +23,15 @@ export const useMockAuth = () => {
     if (!isMounted) return;
     setIsLoading(true);
     setTimeout(() => {
-      const demoUser = { name: 'Pengguna Demo', avatar: 'https://placehold.co/40x40.png' };
-      setUser(demoUser);
-      localStorage.setItem('luminaUser', JSON.stringify(demoUser));
+      // Check if user already exists, if so, use their data, otherwise create new
+      const existingUser = localStorage.getItem(localStorageKey);
+      if (existingUser) {
+        setUser(JSON.parse(existingUser));
+      } else {
+        const demoUser = { name: 'Pengguna Demo', avatar: 'https://placehold.co/40x40.png' };
+        setUser(demoUser);
+        localStorage.setItem(localStorageKey, JSON.stringify(demoUser));
+      }
       setIsLoading(false);
     }, 500);
   }, [isMounted]);
@@ -33,10 +41,18 @@ export const useMockAuth = () => {
     setIsLoading(true);
     setTimeout(() => {
       setUser(null);
-      localStorage.removeItem('luminaUser');
+      localStorage.removeItem(localStorageKey);
       setIsLoading(false);
     }, 500);
   }, [isMounted]);
 
-  return { user, signIn, signOut, isLoading, isMounted };
+  const updateAvatar = useCallback((newAvatarUrl: string) => {
+    if (!isMounted || !user) return;
+    const updatedUser = { ...user, avatar: newAvatarUrl };
+    setUser(updatedUser);
+    localStorage.setItem(localStorageKey, JSON.stringify(updatedUser));
+  }, [isMounted, user]);
+
+
+  return { user, signIn, signOut, isLoading, isMounted, updateAvatar };
 };

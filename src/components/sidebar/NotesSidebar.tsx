@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { FolderPlus, Folder as FolderIcon, FileText, ChevronRight, ChevronDown,StickyNote } from 'lucide-react'; // Added StickyNote
+import { FolderPlus, Folder as FolderIcon, FileText, ChevronRight, ChevronDown,StickyNote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -37,7 +37,7 @@ interface NotesSidebarProps {
   selectedFolderId: string | null;
   onSelectFolder: (folderId: string) => void;
   onAddFolder: (folderName: string) => void;
-  onViewNote: (noteId: string) => void; 
+  onViewNote: (noteId: string) => void;
 }
 
 export function NotesSidebar({
@@ -72,14 +72,14 @@ export function NotesSidebar({
       <UiSidebarHeader className="p-2 flex items-center justify-between sticky top-0 bg-sidebar z-10">
         <div className="flex items-center gap-2">
           <StickyNote className="h-6 w-6 text-sidebar-primary group-data-[collapsible=icon]:mx-auto" />
-          <h2 className="text-lg font-semibold text-sidebar-primary group-data-[collapsible=icon]:hidden">Manajer Catatan</h2>
+          <h2 className="text-lg font-semibold text-sidebar-primary group-data-[collapsible=icon]:hidden">Folders</h2>
         </div>
         
         <Dialog open={isAddFolderDialogOpen} onOpenChange={setIsAddFolderDialogOpen}>
           <DialogTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-8 w-8 text-sidebar-primary hover:bg-sidebar-primary/10 hover:text-sidebar-primary group-data-[collapsible=icon]:mx-auto"
               title="Tambah Folder Baru"
             >
@@ -149,7 +149,7 @@ export function NotesSidebar({
                   {notesInFolder.length > 0 && ( // Only show toggle if there are notes
                      <SidebarMenuAction
                         onClick={(e) => {
-                          e.stopPropagation(); 
+                          e.stopPropagation();
                           toggleFolderExpansion(folder.id);
                         }}
                         className="group-data-[collapsible=icon]:hidden ml-1" // Added margin for spacing
@@ -163,7 +163,7 @@ export function NotesSidebar({
                   <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
                     {notesInFolder.map((note) => (
                       <SidebarMenuSubItem key={note.id}>
-                        <SidebarMenuSubButton 
+                        <SidebarMenuSubButton
                           onClick={() => onViewNote(note.id)}
                           size="sm"
                           className="text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50"
@@ -190,7 +190,7 @@ export function NotesSidebar({
       </ScrollArea>
       
       <UiSidebarFooter className="p-2 mt-auto border-t border-sidebar-border group-data-[collapsible=icon]:hidden sticky bottom-0 bg-sidebar z-10">
-        <p className="text-xs text-sidebar-foreground/50 text-center">Lumina Notes v0.1</p>
+        <p className="text-xs text-sidebar-foreground/50 text-center">Cunenk Notes v0.1</p>
       </UiSidebarFooter>
     </div>
   );

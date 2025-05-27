@@ -31,7 +31,7 @@ export const exportChatAsTxt = (messages: ChatMessage[], lang: string = 'id'): v
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `lumina-chat-${new Date().toISOString()}.txt`;
+  link.download = `cunenk-chat-${new Date().toISOString()}.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -48,7 +48,7 @@ export const exportChatAsJson = (messages: ChatMessage[], lang: string = 'id'): 
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `lumina-chat-${new Date().toISOString()}.json`;
+  link.download = `cunenk-chat-${new Date().toISOString()}.json`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

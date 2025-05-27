@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import { Geist_Mono } from 'next/font/google'; // Keep Geist_Mono for monospaced text
 import './globals.css';
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Lumina AI',
-  description: 'Asisten AI cerdas oleh Firebase Studio',
+  title: 'Cunenk AI',
+  description: 'Asisten AI cerdas Cunenk',
 };
 
 export default function RootLayout({
