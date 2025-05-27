@@ -14,6 +14,7 @@ export interface Folder {
 export interface Note {
   id: string;
   folderId: string;
+  name: string; // Added name property
   content: string;
   timestamp: Date;
 }

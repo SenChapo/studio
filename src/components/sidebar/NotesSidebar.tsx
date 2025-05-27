@@ -139,20 +139,20 @@ export function NotesSidebar({
                     isActive={isActive}
                     tooltip={{ children: folder.name, side: 'right', align: 'start', className:"bg-card text-card-foreground border-border" }}
                     className={cn(
-                      "flex-grow", // Ensure button takes available space
+                      "flex-grow", 
                       isActive ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                   >
                     <FolderIcon className={cn("h-4 w-4", isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/80")} />
                     <span className="truncate group-data-[collapsible=icon]:hidden">{folder.name}</span>
                   </SidebarMenuButton>
-                  {notesInFolder.length > 0 && ( // Only show toggle if there are notes
+                  {notesInFolder.length > 0 && ( 
                      <SidebarMenuAction
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleFolderExpansion(folder.id);
                         }}
-                        className="group-data-[collapsible=icon]:hidden ml-1" // Added margin for spacing
+                        className="group-data-[collapsible=icon]:hidden ml-1" 
                         aria-label={isExpanded ? `Ciutkan folder ${folder.name}` : `Luaskan folder ${folder.name}`}
                       >
                       {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -171,14 +171,14 @@ export function NotesSidebar({
                         >
                           <FileText className="h-3.5 w-3.5 mr-1.5 shrink-0" />
                           <span className="truncate">
-                            {note.content.substring(0, 25) + (note.content.length > 25 ? '...' : '')}
+                            {note.name} 
                           </span>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
                   </SidebarMenuSub>
                 )}
-                {isExpanded && notesInFolder.length === 0 && ( // Show if expanded and no notes
+                {isExpanded && notesInFolder.length === 0 && ( 
                     <p className="pl-[calc(theme(spacing.3)_+_1rem)] pr-2 py-1 text-xs text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden italic">
                         Folder ini kosong.
                     </p>
