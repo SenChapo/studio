@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -72,7 +73,7 @@ export function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-background shadow-2xl">
+    <div className="flex flex-col h-screen bg-background">
       <ChatHeader messages={messages} />
       <ChatMessageList messages={messages} isLoadingAiResponse={isLoading} loadingText="Lumina sedang berpikir..." />
       <ChatInputArea onSendMessage={handleSendMessage} isLoading={isLoading} />
