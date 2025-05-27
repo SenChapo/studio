@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -8,12 +9,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, LogIn, LogOut, Settings, UserCircle, FileText, FileJson } from "lucide-react";
+import { Download, LogIn, LogOut, Settings, UserCircle, FileText, FileJson, PanelLeft } from "lucide-react";
 import { LuminaLogo } from "@/components/icons/LuminaLogo";
 import type { ChatMessage } from "@/lib/chat-export";
 import { exportChatAsTxt, exportChatAsJson } from "@/lib/chat-export";
 import { useMockAuth } from "@/hooks/useMockAuth";
 import { useToast } from "@/hooks/use-toast";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+
 
 interface ChatHeaderProps {
   messages: ChatMessage[];
@@ -45,7 +48,12 @@ export function ChatHeader({ messages }: ChatHeaderProps) {
 
   return (
     <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm">
-      <LuminaLogo />
+      <div className="flex items-center gap-2">
+        <SidebarTrigger className="md:hidden"> {/* Hidden on md and up as sidebar is collapsible by icon */}
+           <PanelLeft className="h-5 w-5"/>
+        </SidebarTrigger>
+        <LuminaLogo />
+      </div>
       <div className="flex items-center space-x-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

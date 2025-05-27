@@ -5,14 +5,68 @@ import { useState, useEffect } from 'react';
 import { ChatHeader } from './ChatHeader';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInputArea } from './ChatInputArea';
-import type { ChatMessage } from '@/lib/chat-export';
+import type { ChatMessage, Folder, Note } from '@/lib/chat-export';
 import { getAiResponse } from '@/app/actions';
 import { useToast } from "@/hooks/use-toast";
+import { 
+  SidebarProvider, 
+  Sidebar, 
+  SidebarContent as UiSidebarContent, // Renamed to avoid conflict
+  SidebarInset 
+} from "@/components/ui/sidebar";
+import { NotesSidebar } from "@/components/sidebar/NotesSidebar";
 
 export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const [folders, setFolders] = useState<Folder[]>([
+    { id: 'folder-1', name: 'Catatan Umum' },
+    { id: 'folder-2', name: 'Ide Proyek' },
+  ]);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(folders[0]?.id || null);
+
+  useEffect(() => {
+    // Ensure a folder is selected if available
+    if (!selectedFolderId && folders.length > 0) {
+      setSelectedFolderId(folders[0].id);
+    }
+  }, [folders, selectedFolderId]);
+
+  const handleAddFolder = (folderName: string) => {
+    if (!folderName.trim()) {
+      toast({ title: "Error", description: "Nama folder tidak boleh kosong.", variant: "destructive" });
+      return;
+    }
+    const newFolder: Folder = { id: crypto.randomUUID(), name: folderName.trim() };
+    setFolders(prev => [...prev, newFolder]);
+    setSelectedFolderId(newFolder.id); // Select new folder
+    toast({ title: "Sukses", description: `Folder '${newFolder.name}' berhasil ditambahkan.` });
+  };
+
+  const handleAddNoteToSelectedFolder = (content: string) => {
+    if (!selectedFolderId) {
+      toast({ title: "Error", description: "Pilih folder terlebih dahulu untuk menyimpan catatan.", variant: "destructive" });
+      return;
+    }
+    const targetFolder = folders.find(f => f.id === selectedFolderId);
+    if (!targetFolder) {
+      toast({ title: "Error", description: "Folder tujuan tidak ditemukan.", variant: "destructive" });
+      return;
+    }
+
+    const newNote: Note = {
+      id: crypto.randomUUID(),
+      folderId: selectedFolderId,
+      content,
+      timestamp: new Date(),
+    };
+    setNotes(prev => [...prev, newNote]);
+    toast({ title: "Sukses", description: `Catatan ditambahkan ke folder '${targetFolder.name}'.` });
+  };
+
 
   const handleSendMessage = async (prompt: string) => {
     const userMessage: ChatMessage = {
@@ -47,7 +101,6 @@ export function ChatPage() {
         description: `Gagal mendapatkan respon AI: ${errorMessage}`,
         variant: "destructive",
       });
-      // Optionally add an error message to the chat
       const errorAiMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'ai',
@@ -61,10 +114,30 @@ export function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      <ChatHeader messages={messages} />
-      <ChatMessageList messages={messages} isLoadingAiResponse={isLoading} loadingText="Lumina sedang berpikir..." />
-      <ChatInputArea onSendMessage={handleSendMessage} isLoading={isLoading} />
-    </div>
+    <SidebarProvider defaultOpen={true}>
+      <Sidebar collapsible="icon">
+        <UiSidebarContent className="p-0"> {/* Use UiSidebarContent and remove its padding */}
+          <NotesSidebar
+            folders={folders}
+            notes={notes}
+            selectedFolderId={selectedFolderId}
+            onSelectFolder={setSelectedFolderId}
+            onAddFolder={handleAddFolder}
+          />
+        </UiSidebarContent>
+      </Sidebar>
+      <SidebarInset>
+        <div className="flex flex-col h-screen bg-background">
+          <ChatHeader messages={messages} />
+          <ChatMessageList 
+            messages={messages} 
+            isLoadingAiResponse={isLoading} 
+            loadingText="Lumina sedang berpikir..."
+            onAddNote={handleAddNoteToSelectedFolder}
+          />
+          <ChatInputArea onSendMessage={handleSendMessage} isLoading={isLoading} />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

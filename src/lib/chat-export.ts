@@ -1,3 +1,4 @@
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'ai';
@@ -5,7 +6,19 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-export const exportChatAsTxt = (messages: ChatMessage[], lang: string = 'en'): void => {
+export interface Folder {
+  id: string;
+  name: string;
+}
+
+export interface Note {
+  id: string;
+  folderId: string;
+  content: string;
+  timestamp: Date;
+}
+
+export const exportChatAsTxt = (messages: ChatMessage[], lang: string = 'id'): void => {
   const locale = lang === 'id' ? 'id-ID' : 'en-US';
   const formattedMessages = messages
     .map(
@@ -25,7 +38,7 @@ export const exportChatAsTxt = (messages: ChatMessage[], lang: string = 'en'): v
   URL.revokeObjectURL(url);
 };
 
-export const exportChatAsJson = (messages: ChatMessage[], lang: string = 'en'): void => {
+export const exportChatAsJson = (messages: ChatMessage[], lang: string = 'id'): void => {
   // Language parameter doesn't affect JSON structure but kept for consistency
   const jsonString = JSON.stringify(messages.map(msg => ({
     ...msg,

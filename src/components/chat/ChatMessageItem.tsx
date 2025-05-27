@@ -1,13 +1,15 @@
+
 import type { ChatMessage } from "@/lib/chat-export";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, User } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Bot, User, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ChatMessageItemProps {
   message: ChatMessage;
+  onAddNote?: (content: string) => void;
 }
 
-// Basic markdown code block parser
 const CodeBlock = ({ codeContent }: { codeContent: string }) => {
   return (
     <pre className="bg-muted p-3 my-2 rounded-md overflow-x-auto shadow-inner">
@@ -17,11 +19,9 @@ const CodeBlock = ({ codeContent }: { codeContent: string }) => {
 };
 
 const TextBlock = ({ textContent }: { textContent: string }) => {
-  // Replace multiple newlines with a single <br /> for paragraph-like spacing
-  // And preserve single newlines for intentional line breaks
   const paragraphs = textContent.split(/(\n\s*\n)/).map((paragraph, index) => {
-    if (paragraph.match(/(\n\s*\n)/)) { // This is a separator (multiple newlines)
-      return <div key={`sep-${index}`} className="h-2"></div>; // Render as small vertical space
+    if (paragraph.match(/(\n\s*\n)/)) {
+      return <div key={`sep-${index}`} className="h-2"></div>;
     }
     if (paragraph.trim() === '') return null;
     return (
@@ -35,7 +35,7 @@ const TextBlock = ({ textContent }: { textContent: string }) => {
 };
 
 
-export function ChatMessageItem({ message }: ChatMessageItemProps) {
+export function ChatMessageItem({ message, onAddNote }: ChatMessageItemProps) {
   const isUser = message.role === "user";
   
   const parts = message.content.split(/(```(?:[\w-]+)?\n[\s\S]*?\n```)/g).filter(part => part.trim() !== '');
@@ -69,12 +69,26 @@ export function ChatMessageItem({ message }: ChatMessageItemProps) {
             return <TextBlock key={`${message.id}-text-${index}`} textContent={part} />;
           })}
         </div>
-        <p className={cn(
-            "text-xs mt-2",
-            isUser ? "text-primary-foreground/70 text-right" : "text-muted-foreground text-left"
-          )}>
-          {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </p>
+        <div className="flex justify-between items-center mt-2">
+          <p className={cn(
+              "text-xs",
+              isUser ? "text-primary-foreground/70" : "text-muted-foreground"
+            )}>
+            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </p>
+          {!isUser && onAddNote && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="p-1 h-auto text-xs text-muted-foreground hover:text-accent-foreground hover:bg-accent/50"
+              onClick={() => onAddNote(message.content)}
+              title="Simpan ke Catatan"
+            >
+              <Save className="h-3.5 w-3.5 mr-1" />
+              Simpan
+            </Button>
+          )}
+        </div>
       </div>
       {isUser && (
         <Avatar className="h-8 w-8 shrink-0 border">

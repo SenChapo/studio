@@ -10,15 +10,15 @@ interface ChatMessageListProps {
   messages: ChatMessage[];
   isLoadingAiResponse: boolean;
   loadingText?: string;
+  onAddNote?: (content: string) => void; 
 }
 
-export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "Lumina sedang berpikir..." }: ChatMessageListProps) {
+export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "Lumina sedang berpikir...", onAddNote }: ChatMessageListProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (viewportRef.current) {
-      // Scroll to bottom only if there are messages or loading indicator
       if (messages.length > 0 || isLoadingAiResponse) {
         viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
       }
@@ -60,7 +60,7 @@ export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "
       ) : (
         <div className="p-4 space-y-2" ref={viewportRef}>
           {messages.map((msg) => (
-            <ChatMessageItem key={msg.id} message={msg} />
+            <ChatMessageItem key={msg.id} message={msg} onAddNote={onAddNote} />
           ))}
           {isLoadingAiResponse && (
             <ChatMessageItem
