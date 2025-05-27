@@ -14,18 +14,6 @@ export function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Add initial welcome message
-  useEffect(() => {
-    setMessages([
-      {
-        id: crypto.randomUUID(),
-        role: 'ai',
-        content: 'Halo! Saya Lumina AI. Ada yang bisa saya bantu hari ini?',
-        timestamp: new Date(),
-      },
-    ]);
-  }, []);
-
   const handleSendMessage = async (prompt: string) => {
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
