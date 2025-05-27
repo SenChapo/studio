@@ -10,10 +10,10 @@ interface ChatMessageListProps {
   messages: ChatMessage[];
   isLoadingAiResponse: boolean;
   loadingText?: string;
-  onAddNote?: (content: string) => void; 
+  onInitiateSaveNote?: (content: string) => void; 
 }
 
-export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "Lumina sedang berpikir...", onAddNote }: ChatMessageListProps) {
+export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "Lumina sedang berpikir...", onInitiateSaveNote }: ChatMessageListProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -60,7 +60,7 @@ export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "
       ) : (
         <div className="p-4 space-y-2" ref={viewportRef}>
           {messages.map((msg) => (
-            <ChatMessageItem key={msg.id} message={msg} onAddNote={onAddNote} />
+            <ChatMessageItem key={msg.id} message={msg} onInitiateSaveNote={onInitiateSaveNote} />
           ))}
           {isLoadingAiResponse && (
             <ChatMessageItem

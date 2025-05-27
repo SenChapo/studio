@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 interface ChatMessageItemProps {
   message: ChatMessage;
-  onAddNote?: (content: string) => void;
+  onInitiateSaveNote?: (content: string) => void;
 }
 
 const CodeBlock = ({ codeContent }: { codeContent: string }) => {
@@ -35,7 +35,7 @@ const TextBlock = ({ textContent }: { textContent: string }) => {
 };
 
 
-export function ChatMessageItem({ message, onAddNote }: ChatMessageItemProps) {
+export function ChatMessageItem({ message, onInitiateSaveNote }: ChatMessageItemProps) {
   const isUser = message.role === "user";
   
   const parts = message.content.split(/(```(?:[\w-]+)?\n[\s\S]*?\n```)/g).filter(part => part.trim() !== '');
@@ -76,12 +76,12 @@ export function ChatMessageItem({ message, onAddNote }: ChatMessageItemProps) {
             )}>
             {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
-          {!isUser && onAddNote && (
+          {!isUser && onInitiateSaveNote && (
             <Button 
               variant="ghost" 
               size="sm" 
               className="p-1 h-auto text-xs text-muted-foreground hover:text-accent-foreground hover:bg-accent/50"
-              onClick={() => onAddNote(message.content)}
+              onClick={() => onInitiateSaveNote(message.content)}
               title="Simpan ke Catatan"
             >
               <Save className="h-3.5 w-3.5 mr-1" />
