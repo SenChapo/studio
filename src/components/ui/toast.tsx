@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -43,14 +44,23 @@ const toastVariants = cva(
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
-    VariantProps<typeof toastVariants>
->(({ className, variant, ...props }, ref) => {
+    VariantProps<typeof toastVariants> & { duration?: number }
+>(({ className, variant, duration, ...props }, ref) => {
   return (
     <ToastPrimitives.Root
       ref={ref}
       className={cn(toastVariants({ variant }), className)}
       {...props}
-    />
+    >
+      {props.children}
+      {duration && (
+        <div
+          key={`progress-${props.id}`} 
+          className="absolute bottom-0 left-0 h-[4px] w-full bg-primary animate-toast-progress"
+          style={{ animationDuration: `${duration / 1000}s` }}
+        />
+      )}
+    </ToastPrimitives.Root>
   )
 })
 Toast.displayName = ToastPrimitives.Root.displayName
@@ -112,7 +122,7 @@ const ToastDescription = React.forwardRef<
 ))
 ToastDescription.displayName = ToastPrimitives.Description.displayName
 
-type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
+type ToastProps = React.ComponentPropsWithoutRef<typeof Toast> & { duration?: number }
 
 type ToastActionElement = React.ReactElement<typeof ToastAction>
 

@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -9,13 +10,15 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_DURATION = 3000; // Auto-dismiss after 3 seconds
+const TOAST_ANIMATION_DURATION = 500; // Duration for the fade-out animation
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  duration?: number; // To pass to the component for progress bar styling
 }
 
 const actionTypes = {
@@ -58,9 +61,10 @@ interface State {
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-const addToRemoveQueue = (toastId: string) => {
+const addToRemoveQueue = (toastId: string, delay: number) => {
   if (toastTimeouts.has(toastId)) {
-    return
+    clearTimeout(toastTimeouts.get(toastId)!)
+    toastTimeouts.delete(toastId);
   }
 
   const timeout = setTimeout(() => {
@@ -69,7 +73,7 @@ const addToRemoveQueue = (toastId: string) => {
       type: "REMOVE_TOAST",
       toastId: toastId,
     })
-  }, TOAST_REMOVE_DELAY)
+  }, delay)
 
   toastTimeouts.set(toastId, timeout)
 }
@@ -91,16 +95,16 @@ export const reducer = (state: State, action: Action): State => {
       }
 
     case "DISMISS_TOAST": {
-      const { toastId } = action
+      const { toastId } = action;
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
-        addToRemoveQueue(toastId)
+        // Mark specific toast for closing and queue its removal after animation
+        addToRemoveQueue(toastId, TOAST_ANIMATION_DURATION);
       } else {
+        // Mark all toasts for closing and queue their removal
         state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id)
-        })
+          addToRemoveQueue(toast.id, TOAST_ANIMATION_DURATION);
+        });
       }
 
       return {
@@ -109,7 +113,7 @@ export const reducer = (state: State, action: Action): State => {
           t.id === toastId || toastId === undefined
             ? {
                 ...t,
-                open: false,
+                open: false, // Set open to false to trigger close animation
               }
             : t
         ),
@@ -150,7 +154,9 @@ function toast({ ...props }: Toast) {
       type: "UPDATE_TOAST",
       toast: { ...props, id },
     })
-  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+  
+  // Actual dismiss function to be called by timeout or manually
+  const dismissToast = () => dispatch({ type: "DISMISS_TOAST", toastId: id });
 
   dispatch({
     type: "ADD_TOAST",
@@ -158,15 +164,27 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
-        if (!open) dismiss()
+      duration: TOAST_DURATION, // Pass duration for progress bar
+      onOpenChange: (open) => { // Handles manual close (e.g., X button)
+        if (!open) {
+          // If Radix signals close, ensure our state reflects it and starts removal
+          dismissToast();
+        }
       },
     },
   })
 
+  // Set a timeout to automatically dismiss the toast
+  const autoDismissTimeout = setTimeout(() => {
+    dismissToast();
+  }, TOAST_DURATION);
+  // Store this timeout so it can be cleared if the toast is dismissed early manually
+  toastTimeouts.set(`auto-${id}`, autoDismissTimeout);
+
+
   return {
     id: id,
-    dismiss,
+    dismiss: dismissToast, // Expose dismiss to allow manual dismissal if needed
     update,
   }
 }
