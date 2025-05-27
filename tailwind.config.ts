@@ -10,8 +10,9 @@ export default {
   theme: {
   	extend: {
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
+        // Update sans-serif stack to prioritize Aptos Display
+        sans: ["Aptos Display", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "monospace"], // Keep Geist Mono for mono
       },
   		colors: {
   			background: 'hsl(var(--background))',
