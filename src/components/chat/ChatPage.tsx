@@ -8,11 +8,11 @@ import { ChatInputArea } from './ChatInputArea';
 import type { ChatMessage, Folder, Note } from '@/lib/chat-export';
 import { getAiResponse } from '@/app/actions';
 import { useToast } from "@/hooks/use-toast";
-import { 
-  SidebarProvider, 
-  Sidebar, 
+import {
+  SidebarProvider,
+  Sidebar,
   SidebarContent as UiSidebarContent,
-  SidebarInset 
+  SidebarInset
 } from "@/components/ui/sidebar";
 import { NotesSidebar } from "@/components/sidebar/NotesSidebar";
 import {
@@ -54,7 +54,7 @@ export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useMockAuth(); 
+  const { user } = useMockAuth();
 
   const [folders, setFolders] = useState<Folder[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -72,7 +72,7 @@ export function ChatPage() {
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [editedNoteName, setEditedNoteName] = useState('');
   const [editedNoteContent, setEditedNoteContent] = useState('');
-  
+
   // State for Delete Note Confirmation Dialog
   const [isDeleteNoteConfirmOpen, setIsDeleteNoteConfirmOpen] = useState(false);
   const [noteIdToDelete, setNoteIdToDelete] = useState<string | null>(null);
@@ -99,7 +99,7 @@ export function ChatPage() {
     }
     const newFolder: Folder = { id: crypto.randomUUID(), name: folderName.trim() };
     setFolders(prev => [...prev, newFolder].sort((a, b) => a.name.localeCompare(b.name)));
-    setSelectedFolderId(newFolder.id); 
+    setSelectedFolderId(newFolder.id);
     if (!selectedFolderForSaving) {
         setSelectedFolderForSaving(newFolder.id);
     }
@@ -205,9 +205,9 @@ export function ChatPage() {
   const handleToggleEditNote = () => {
     if (noteToViewOrEdit) {
       setIsEditingNote(!isEditingNote);
-      if (isEditingNote) { 
+      if (isEditingNote) {
         setEditedNoteName(noteToViewOrEdit.name);
-        setEditedNoteContent(noteToViewOrEdit.content); 
+        setEditedNoteContent(noteToViewOrEdit.content);
       }
     }
   };
@@ -215,27 +215,27 @@ export function ChatPage() {
   const handleSaveEditedNote = () => {
     if (noteToViewOrEdit) {
       const finalEditedName = editedNoteName.trim() || "Catatan Tanpa Judul";
-      setNotes(prevNotes => 
-        prevNotes.map(n => 
-          n.id === noteToViewOrEdit.id ? { 
-            ...n, 
-            name: finalEditedName, 
-            content: editedNoteContent, 
+      setNotes(prevNotes =>
+        prevNotes.map(n =>
+          n.id === noteToViewOrEdit.id ? {
+            ...n,
+            name: finalEditedName,
+            content: editedNoteContent,
             lastEditedTimestamp: new Date() // Update last edited timestamp
           } : n
         )
       );
       setNoteToViewOrEdit(prev => prev ? {
-        ...prev, 
-        name: finalEditedName, 
-        content: editedNoteContent, 
+        ...prev,
+        name: finalEditedName,
+        content: editedNoteContent,
         lastEditedTimestamp: new Date()
       } : null);
       setIsEditingNote(false);
       toast({ title: "Sukses", description: "Catatan berhasil diperbarui." });
     }
   };
-  
+
   const handleInitiateDeleteNote = (noteId: string) => {
     setNoteIdToDelete(noteId);
     setIsDeleteNoteConfirmOpen(true);
@@ -248,7 +248,7 @@ export function ChatPage() {
       setNoteIdToDelete(null);
       setIsDeleteNoteConfirmOpen(false);
       if (noteToViewOrEdit && noteToViewOrEdit.id === noteIdToDelete) {
-        setIsViewNoteDialogOpen(false); 
+        setIsViewNoteDialogOpen(false);
         setNoteToViewOrEdit(null);
       }
     }
@@ -313,12 +313,12 @@ export function ChatPage() {
       <SidebarInset>
         <div className="flex flex-col h-screen bg-background">
           <ChatHeader messages={messages} />
-          <ChatMessageList 
-            messages={messages} 
-            isLoadingAiResponse={isLoading} 
+          <ChatMessageList
+            messages={messages}
+            isLoadingAiResponse={isLoading}
             loadingText="Cunenk sedang berpikir..."
             onInitiateSaveNote={handleInitiateSaveNote}
-            user={user} 
+            user={user}
           />
           <ChatInputArea onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>
@@ -336,11 +336,11 @@ export function ChatPage() {
           <div className="grid gap-4 py-4">
             <div className="space-y-1">
                 <Label htmlFor="noteName">Nama Catatan</Label>
-                <Input 
+                <Input
                     id="noteName"
                     value={noteNameToSave}
                     onChange={(e) => setNoteNameToSave(e.target.value)}
-                    placeholder="Contoh: Ide Resep Nasi Goreng" 
+                    placeholder="Contoh: Ide Resep Nasi Goreng"
                 />
             </div>
             {noteContentToSave && (
@@ -378,9 +378,9 @@ export function ChatPage() {
             <DialogClose asChild>
               <Button type="button" variant="outline">Batal</Button>
             </DialogClose>
-            <Button 
-              type="button" 
-              onClick={handleConfirmSaveNote} 
+            <Button
+              type="button"
+              onClick={handleConfirmSaveNote}
               disabled={!selectedFolderForSaving || folders.length === 0}
             >
               Simpan
@@ -402,14 +402,14 @@ export function ChatPage() {
             <DialogHeader>
               <DialogTitle>{isEditingNote ? "Edit Catatan" : noteToViewOrEdit.name}</DialogTitle>
               <DialogDescription className="text-xs">
-                {isEditingNote 
-                  ? "Ubah nama dan konten catatan Anda di bawah ini." 
+                {isEditingNote
+                  ? "Ubah nama dan konten catatan Anda di bawah ini."
                   : (
                     <>
-                      <div>Folder: {folders.find(f => f.id === noteToViewOrEdit.folderId)?.name || 'Tidak diketahui'}</div>
-                      <div>Dibuat: {formatTimestamp(noteToViewOrEdit.timestamp)}</div>
+                      <span className="block">Folder: {folders.find(f => f.id === noteToViewOrEdit.folderId)?.name || 'Tidak diketahui'}</span>
+                      <span className="block">Dibuat: {formatTimestamp(noteToViewOrEdit.timestamp)}</span>
                       {noteToViewOrEdit.lastEditedTimestamp && (
-                        <div>Terakhir Diedit: {formatTimestamp(noteToViewOrEdit.lastEditedTimestamp)}</div>
+                        <span className="block">Terakhir Diedit: {formatTimestamp(noteToViewOrEdit.lastEditedTimestamp)}</span>
                       )}
                     </>
                   )
