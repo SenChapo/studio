@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Lumina AI',
-  description: 'An intelligent AI assistant by Firebase Studio',
+  description: 'Asisten AI cerdas oleh Firebase Studio',
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="id">
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
         {children}
         <Toaster />

@@ -19,7 +19,7 @@ export function ChatPage() {
       {
         id: crypto.randomUUID(),
         role: 'ai',
-        content: 'Hello! I am Lumina AI. How can I assist you today?',
+        content: 'Halo! Saya Lumina AI. Ada yang bisa saya bantu hari ini?',
         timestamp: new Date(),
       },
     ]);
@@ -49,20 +49,20 @@ export function ChatPage() {
         };
         setMessages((prevMessages) => [...prevMessages, aiMessage]);
       } else {
-         throw new Error("AI response was empty.");
+         throw new Error("Respon AI kosong.");
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      const errorMessage = error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui.";
       toast({
         title: "Error",
-        description: `Failed to get AI response: ${errorMessage}`,
+        description: `Gagal mendapatkan respon AI: ${errorMessage}`,
         variant: "destructive",
       });
       // Optionally add an error message to the chat
       const errorAiMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'ai',
-        content: `Sorry, I encountered an error: ${errorMessage}`,
+        content: `Maaf, saya mengalami kesalahan: ${errorMessage}`,
         timestamp: new Date(),
       };
       setMessages((prevMessages) => [...prevMessages, errorAiMessage]);
@@ -74,7 +74,7 @@ export function ChatPage() {
   return (
     <div className="flex flex-col h-screen max-w-3xl mx-auto bg-background shadow-2xl">
       <ChatHeader messages={messages} />
-      <ChatMessageList messages={messages} isLoadingAiResponse={isLoading} />
+      <ChatMessageList messages={messages} isLoadingAiResponse={isLoading} loadingText="Lumina sedang berpikir..." />
       <ChatInputArea onSendMessage={handleSendMessage} isLoading={isLoading} />
     </div>
   );

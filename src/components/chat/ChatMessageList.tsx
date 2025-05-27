@@ -8,9 +8,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface ChatMessageListProps {
   messages: ChatMessage[];
   isLoadingAiResponse: boolean;
+  loadingText?: string;
 }
 
-export function ChatMessageList({ messages, isLoadingAiResponse }: ChatMessageListProps) {
+export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "Lumina is thinking..." }: ChatMessageListProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -32,7 +33,7 @@ export function ChatMessageList({ messages, isLoadingAiResponse }: ChatMessageLi
             message={{
               id: "loading-indicator",
               role: "ai",
-              content: "Lumina is thinking...",
+              content: loadingText,
               timestamp: new Date(),
             }}
           />

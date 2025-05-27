@@ -49,13 +49,13 @@ export function ChatInputArea({ onSendMessage, isLoading }: ChatInputAreaProps) 
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Ask Lumina AI..."
+        placeholder="Tanya Lumina AI..."
         className="flex-grow resize-none max-h-40 min-h-[40px] text-base"
         rows={1}
         disabled={isLoading}
-        aria-label="Chat input"
+        aria-label="Input obrolan"
       />
-      <Button type="submit" size="icon" disabled={isLoading || !inputValue.trim()} aria-label="Send message">
+      <Button type="submit" size="icon" disabled={isLoading || !inputValue.trim()} aria-label="Kirim pesan">
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : (

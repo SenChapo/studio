@@ -26,20 +26,20 @@ export function ChatHeader({ messages }: ChatHeaderProps) {
   const handleExport = (format: "txt" | "json") => {
     if (messages.length === 0) {
       toast({
-        title: "Export Error",
-        description: "There are no messages to export.",
+        title: "Kesalahan Ekspor",
+        description: "Tidak ada pesan untuk diekspor.",
         variant: "destructive",
       });
       return;
     }
     if (format === "txt") {
-      exportChatAsTxt(messages);
+      exportChatAsTxt(messages, "id");
     } else {
-      exportChatAsJson(messages);
+      exportChatAsJson(messages, "id");
     }
     toast({
-      title: "Export Successful",
-      description: `Chat log exported as ${format.toUpperCase()}.`,
+      title: "Ekspor Berhasil",
+      description: `Riwayat obrolan diekspor sebagai ${format.toUpperCase()}.`,
     });
   };
 
@@ -49,20 +49,20 @@ export function ChatHeader({ messages }: ChatHeaderProps) {
       <div className="flex items-center space-x-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Export chat">
+            <Button variant="outline" size="icon" aria-label="Ekspor obrolan">
               <Download className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Export Chat</DropdownMenuLabel>
+            <DropdownMenuLabel>Ekspor Obrolan</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => handleExport("txt")}>
               <FileText className="mr-2 h-4 w-4" />
-              Export as TXT
+              Ekspor sebagai TXT
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleExport("json")}>
               <FileJson className="mr-2 h-4 w-4" />
-              Export as JSON
+              Ekspor sebagai JSON
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -84,18 +84,18 @@ export function ChatHeader({ messages }: ChatHeaderProps) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem disabled>
                     <Settings className="mr-2 h-4 w-4" />
-                    Settings
+                    Pengaturan
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={signOut} disabled={isLoading}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    Keluar
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Button variant="outline" onClick={signIn} disabled={isLoading}>
                 <LogIn className="mr-2 h-4 w-4" />
-                Sign In
+                Masuk
               </Button>
             )}
           </>

@@ -5,11 +5,12 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-export const exportChatAsTxt = (messages: ChatMessage[]): void => {
+export const exportChatAsTxt = (messages: ChatMessage[], lang: string = 'en'): void => {
+  const locale = lang === 'id' ? 'id-ID' : 'en-US';
   const formattedMessages = messages
     .map(
       (msg) =>
-        `[${new Date(msg.timestamp).toLocaleString()}] ${msg.role.toUpperCase()}: ${msg.content}`
+        `[${new Date(msg.timestamp).toLocaleString(locale)}] ${msg.role.toUpperCase()}: ${msg.content}`
     )
     .join('\n\n');
   
@@ -24,8 +25,12 @@ export const exportChatAsTxt = (messages: ChatMessage[]): void => {
   URL.revokeObjectURL(url);
 };
 
-export const exportChatAsJson = (messages: ChatMessage[]): void => {
-  const jsonString = JSON.stringify(messages, null, 2);
+export const exportChatAsJson = (messages: ChatMessage[], lang: string = 'en'): void => {
+  // Language parameter doesn't affect JSON structure but kept for consistency
+  const jsonString = JSON.stringify(messages.map(msg => ({
+    ...msg,
+    timestamp: msg.timestamp.toISOString() // Standardize timestamp format for JSON
+  })), null, 2);
   const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

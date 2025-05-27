@@ -21,7 +21,7 @@ export const useMockAuth = () => {
     if (!isMounted) return;
     setIsLoading(true);
     setTimeout(() => {
-      const demoUser = { name: 'Demo User', avatar: 'https://placehold.co/40x40.png' };
+      const demoUser = { name: 'Pengguna Demo', avatar: 'https://placehold.co/40x40.png' };
       setUser(demoUser);
       localStorage.setItem('luminaUser', JSON.stringify(demoUser));
       setIsLoading(false);
