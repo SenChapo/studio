@@ -19,7 +19,8 @@ import {
   SidebarMenuButton,
   SidebarMenuSub,
   SidebarMenuSubItem,
-  SidebarMenuSubButton
+  SidebarMenuSubButton,
+  SidebarMenuAction // Import SidebarMenuAction
 } from '@/components/ui/sidebar'; // Using shadcn sidebar components
 
 interface NotesSidebarProps {
@@ -93,29 +94,26 @@ export function NotesSidebar({
                   isActive={isActive}
                   tooltip={{ children: folder.name, side: 'right', align: 'start', className:"bg-card text-card-foreground border-border" }}
                   className={cn(
-                    "justify-between",
+                    // Removed "justify-between" as SidebarMenuAction handles positioning
                     isActive ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )}
                 >
-                  <div className="flex items-center gap-2">
-                    <FolderIcon className={cn("h-4 w-4", isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/80")} />
-                    <span className="truncate group-data-[collapsible=icon]:hidden">{folder.name}</span>
-                  </div>
-                  {notesInFolder.length > 0 && (
-                     <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 p-0 group-data-[collapsible=icon]:hidden hover:bg-transparent"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent folder selection
-                          toggleFolderExpansion(folder.id);
-                        }}
-                      >
-                      {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </Button>
-                  )}
+                  <FolderIcon className={cn("h-4 w-4", isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/80")} />
+                  <span className="truncate group-data-[collapsible=icon]:hidden">{folder.name}</span>
                 </SidebarMenuButton>
-                {isExpanded && notesInFolder.length > 0 && (
+                {notesInFolder.length > 0 && (
+                   <SidebarMenuAction
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent folder selection when clicking the action
+                        toggleFolderExpansion(folder.id);
+                      }}
+                      className="group-data-[collapsible=icon]:hidden"
+                      aria-label={isExpanded ? `Collapse folder ${folder.name}` : `Expand folder ${folder.name}`}
+                    >
+                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </SidebarMenuAction>
+                )}
+                 {isExpanded && notesInFolder.length > 0 && (
                   <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
                     {notesInFolder.map((note) => (
                       <SidebarMenuSubItem key={note.id}>
@@ -150,3 +148,4 @@ export function NotesSidebar({
     </div>
   );
 }
+
