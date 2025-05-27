@@ -38,7 +38,7 @@ interface NotesSidebarProps {
   onSelectFolder: (folderId: string) => void;
   onAddFolder: (folderName: string) => void;
   onViewNote: (noteId: string) => void;
-  onInitiateDeleteFolder: (folderId: string) => void; // New prop
+  onInitiateDeleteFolder: (folderId: string) => void;
 }
 
 export function NotesSidebar({
@@ -48,7 +48,7 @@ export function NotesSidebar({
   onSelectFolder,
   onAddFolder,
   onViewNote,
-  onInitiateDeleteFolder, // New prop
+  onInitiateDeleteFolder,
 }: NotesSidebarProps) {
   const [isAddFolderDialogOpen, setIsAddFolderDialogOpen] = useState(false);
   const [newFolderNameDialog, setNewFolderNameDialog] = useState('');
@@ -134,45 +134,44 @@ export function NotesSidebar({
             
             return (
               <SidebarMenuItem key={folder.id}>
-                <div className="flex items-center w-full">
-                  <SidebarMenuButton
-                    onClick={() => onSelectFolder(folder.id)}
-                    isActive={isActive}
-                    tooltip={{ children: folder.name, side: 'right', align: 'start', className:"bg-card text-card-foreground border-border" }}
-                    className={cn(
-                      "flex-grow", 
-                      isActive ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                    )}
-                  >
-                    <FolderIcon className={cn("h-4 w-4", isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/80")} />
-                    <span className="truncate group-data-[collapsible=icon]:hidden">{folder.name}</span>
-                  </SidebarMenuButton>
+                <SidebarMenuButton
+                  onClick={() => onSelectFolder(folder.id)}
+                  isActive={isActive}
+                  tooltip={{ children: folder.name, side: 'right', align: 'start', className:"bg-card text-card-foreground border-border" }}
+                  className={cn(
+                    isActive ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  )}
+                >
+                  <FolderIcon className={cn("h-4 w-4 shrink-0", isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/80")} />
+                  <span className="truncate group-data-[collapsible=icon]:hidden flex-1">{folder.name}</span>
                   
-                  <SidebarMenuAction
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onInitiateDeleteFolder(folder.id);
-                      }}
-                      className="group-data-[collapsible=icon]:hidden ml-1 text-sidebar-foreground/60 hover:text-destructive"
-                      aria-label={`Hapus folder ${folder.name}`}
-                      title={`Hapus folder ${folder.name}`}
-                    >
-                    <Trash2 className="h-4 w-4" />
-                  </SidebarMenuAction>
-
                   {notesInFolder.length > 0 && ( 
-                     <SidebarMenuAction
+                     <span
+                        className="group-data-[collapsible=icon]:hidden p-0.5 rounded hover:bg-sidebar-accent/20 dark:hover:bg-sidebar-accent/50"
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleFolderExpansion(folder.id);
                         }}
-                        className="group-data-[collapsible=icon]:hidden ml-1" 
                         aria-label={isExpanded ? `Ciutkan folder ${folder.name}` : `Luaskan folder ${folder.name}`}
+                        title={isExpanded ? `Ciutkan folder ${folder.name}` : `Luaskan folder ${folder.name}`}
                       >
                       {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </SidebarMenuAction>
+                    </span>
                   )}
-                </div>
+                </SidebarMenuButton>
+                
+                <SidebarMenuAction
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onInitiateDeleteFolder(folder.id);
+                    }}
+                    className="group-data-[collapsible=icon]:hidden text-sidebar-foreground/60 hover:text-destructive"
+                    aria-label={`Hapus folder ${folder.name}`}
+                    title={`Hapus folder ${folder.name}`}
+                  >
+                  <Trash2 className="h-4 w-4" />
+                </SidebarMenuAction>
+                
                  {isExpanded && notesInFolder.length > 0 && (
                   <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
                     {notesInFolder.map((note) => (
@@ -181,7 +180,7 @@ export function NotesSidebar({
                           onClick={() => onViewNote(note.id)}
                           size="sm"
                           className="text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50"
-                          title={note.name} // Show note name as main tooltip for sub-button
+                          title={note.name} 
                         >
                           <FileText className="h-3.5 w-3.5 mr-1.5 shrink-0" />
                           <span className="truncate">
