@@ -22,8 +22,6 @@ import {
 import {
   SidebarHeader as UiSidebarHeader,
   SidebarFooter as UiSidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -39,6 +37,7 @@ interface NotesSidebarProps {
   selectedFolderId: string | null;
   onSelectFolder: (folderId: string) => void;
   onAddFolder: (folderName: string) => void;
+  onViewNote: (noteId: string) => void; 
 }
 
 export function NotesSidebar({
@@ -47,6 +46,7 @@ export function NotesSidebar({
   selectedFolderId,
   onSelectFolder,
   onAddFolder,
+  onViewNote,
 }: NotesSidebarProps) {
   const [isAddFolderDialogOpen, setIsAddFolderDialogOpen] = useState(false);
   const [newFolderNameDialog, setNewFolderNameDialog] = useState('');
@@ -64,7 +64,7 @@ export function NotesSidebar({
     setExpandedFolders(prev => ({ ...prev, [folderId]: !prev[folderId] }));
   };
 
-  const filteredNotes = (folderId: string) => notes.filter(note => note.folderId === folderId);
+  const filteredNotes = (folderId: string) => notes.filter(note => note.folderId === folderId).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   return (
     <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
@@ -117,10 +117,15 @@ export function NotesSidebar({
 
       <ScrollArea className="flex-grow">
         <SidebarMenu className="px-2 py-2">
+          {folders.length === 0 && (
+            <p className="p-4 text-sm text-center text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
+              Belum ada folder. Klik tombol <FolderPlus className="inline h-4 w-4 mx-1" /> untuk membuat folder baru.
+            </p>
+          )}
           {folders.map((folder) => {
             const isActive = folder.id === selectedFolderId;
             const notesInFolder = filteredNotes(folder.id);
-            const isExpanded = expandedFolders[folder.id] ?? false;
+            const isExpanded = expandedFolders[folder.id] ?? true; // Default to expanded
             
             return (
               <SidebarMenuItem key={folder.id}>
@@ -142,7 +147,7 @@ export function NotesSidebar({
                         toggleFolderExpansion(folder.id);
                       }}
                       className="group-data-[collapsible=icon]:hidden"
-                      aria-label={isExpanded ? `Collapse folder ${folder.name}` : `Expand folder ${folder.name}`}
+                      aria-label={isExpanded ? `Ciutkan folder ${folder.name}` : `Luaskan folder ${folder.name}`}
                     >
                     {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </SidebarMenuAction>
@@ -152,6 +157,7 @@ export function NotesSidebar({
                     {notesInFolder.map((note) => (
                       <SidebarMenuSubItem key={note.id}>
                         <SidebarMenuSubButton 
+                          onClick={() => onViewNote(note.id)}
                           size="sm"
                           className="text-sidebar-foreground/80 hover:text-sidebar-accent-foreground"
                           title={note.content}
@@ -165,15 +171,15 @@ export function NotesSidebar({
                     ))}
                   </SidebarMenuSub>
                 )}
+                {isExpanded && notesInFolder.length === 0 && (
+                    <p className="pl-8 pr-2 py-1 text-xs text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
+                        Folder ini kosong.
+                    </p>
+                )}
               </SidebarMenuItem>
             );
           })}
         </SidebarMenu>
-         {folders.length === 0 && (
-            <p className="p-4 text-sm text-center text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
-              Belum ada folder. Klik tombol <FolderPlus className="inline h-4 w-4 mx-1" /> untuk membuat folder baru.
-            </p>
-        )}
       </ScrollArea>
       
       <UiSidebarFooter className="p-2 mt-auto border-t border-sidebar-border group-data-[collapsible=icon]:hidden">

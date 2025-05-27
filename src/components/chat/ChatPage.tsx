@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChatHeader } from './ChatHeader';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInputArea } from './ChatInputArea';
@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -33,6 +35,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -48,11 +61,21 @@ export function ChatPage() {
   const [noteContentToSave, setNoteContentToSave] = useState<string | null>(null);
   const [selectedFolderForSaving, setSelectedFolderForSaving] = useState<string | null>(null);
 
+  // State for View/Edit Note Dialog
+  const [isViewNoteDialogOpen, setIsViewNoteDialogOpen] = useState(false);
+  const [noteToViewOrEdit, setNoteToViewOrEdit] = useState<Note | null>(null);
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [editedNoteContent, setEditedNoteContent] = useState('');
+  
+  // State for Delete Note Confirmation Dialog
+  const [isDeleteNoteConfirmOpen, setIsDeleteNoteConfirmOpen] = useState(false);
+  const [noteIdToDelete, setNoteIdToDelete] = useState<string | null>(null);
+
+
   useEffect(() => {
     if (folders.length > 0 && !selectedFolderId) {
       setSelectedFolderId(folders[0].id);
     }
-    // Set default folder for saving if dialog opens and no folder is selected for saving yet
     if (folders.length > 0 && !selectedFolderForSaving) {
       setSelectedFolderForSaving(folders[0].id);
     }
@@ -67,7 +90,7 @@ export function ChatPage() {
     const newFolder: Folder = { id: crypto.randomUUID(), name: folderName.trim() };
     setFolders(prev => [...prev, newFolder]);
     setSelectedFolderId(newFolder.id); 
-    if (!selectedFolderForSaving) { // Also set for saving dialog if it's the first folder
+    if (!selectedFolderForSaving) {
         setSelectedFolderForSaving(newFolder.id);
     }
     toast({ title: "Sukses", description: `Folder '${newFolder.name}' berhasil ditambahkan.` });
@@ -79,7 +102,6 @@ export function ChatPage() {
       return;
     }
     setNoteContentToSave(content);
-    // Default to the currently selected sidebar folder, or the first folder if none selected in sidebar.
     setSelectedFolderForSaving(selectedFolderId || folders[0]?.id || null);
     setIsSaveNoteDialogOpen(true);
   };
@@ -106,7 +128,6 @@ export function ChatPage() {
     setIsSaveNoteDialogOpen(false);
     setNoteContentToSave(null);
   };
-
 
   const handleSendMessage = async (prompt: string) => {
     const userMessage: ChatMessage = {
@@ -153,6 +174,58 @@ export function ChatPage() {
     }
   };
 
+  // --- View/Edit Note Dialog Logic ---
+  const handleOpenViewNoteDialog = useCallback((noteId: string) => {
+    const note = notes.find(n => n.id === noteId);
+    if (note) {
+      setNoteToViewOrEdit(note);
+      setEditedNoteContent(note.content);
+      setIsEditingNote(false);
+      setIsViewNoteDialogOpen(true);
+    }
+  }, [notes]);
+
+  const handleToggleEditNote = () => {
+    if (noteToViewOrEdit) {
+      setIsEditingNote(!isEditingNote);
+      if (isEditingNote) { // Was editing, now viewing
+        setEditedNoteContent(noteToViewOrEdit.content); // Reset content if edit is cancelled
+      }
+    }
+  };
+
+  const handleSaveEditedNote = () => {
+    if (noteToViewOrEdit) {
+      setNotes(prevNotes => 
+        prevNotes.map(n => 
+          n.id === noteToViewOrEdit.id ? { ...n, content: editedNoteContent, timestamp: new Date() } : n
+        )
+      );
+      setNoteToViewOrEdit(prev => prev ? {...prev, content: editedNoteContent, timestamp: new Date()} : null);
+      setIsEditingNote(false);
+      toast({ title: "Sukses", description: "Catatan berhasil diperbarui." });
+      // Optionally close dialog after saving: setIsViewNoteDialogOpen(false);
+    }
+  };
+  
+  const handleInitiateDeleteNote = (noteId: string) => {
+    setNoteIdToDelete(noteId);
+    setIsDeleteNoteConfirmOpen(true);
+  };
+
+  const handleConfirmDeleteNote = () => {
+    if (noteIdToDelete) {
+      setNotes(prevNotes => prevNotes.filter(n => n.id !== noteIdToDelete));
+      toast({ title: "Sukses", description: "Catatan berhasil dihapus.", variant: "destructive" });
+      setNoteIdToDelete(null);
+      setIsDeleteNoteConfirmOpen(false);
+      if (noteToViewOrEdit && noteToViewOrEdit.id === noteIdToDelete) {
+        setIsViewNoteDialogOpen(false); // Close view dialog if the deleted note was being viewed
+        setNoteToViewOrEdit(null);
+      }
+    }
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <Sidebar collapsible="icon">
@@ -163,6 +236,7 @@ export function ChatPage() {
             selectedFolderId={selectedFolderId}
             onSelectFolder={setSelectedFolderId}
             onAddFolder={handleAddFolder}
+            onViewNote={handleOpenViewNoteDialog}
           />
         </UiSidebarContent>
       </Sidebar>
@@ -179,6 +253,7 @@ export function ChatPage() {
         </div>
       </SidebarInset>
 
+      {/* Save Note Dialog */}
       <Dialog open={isSaveNoteDialogOpen} onOpenChange={setIsSaveNoteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -191,9 +266,11 @@ export function ChatPage() {
             {noteContentToSave && (
               <div className="space-y-1">
                 <Label htmlFor="noteContentPreview">Isi Catatan (pratinjau):</Label>
-                <p id="noteContentPreview" className="text-sm text-muted-foreground max-h-20 overflow-y-auto border p-2 rounded-md bg-muted/50">
-                  {noteContentToSave.substring(0, 150) + (noteContentToSave.length > 150 ? '...' : '')}
-                </p>
+                <ScrollArea className="max-h-20 w-full rounded-md border p-2 bg-muted/50">
+                  <p id="noteContentPreview" className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {noteContentToSave}
+                  </p>
+                </ScrollArea>
               </div>
             )}
             <div className="space-y-1">
@@ -233,6 +310,75 @@ export function ChatPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* View/Edit Note Dialog */}
+      {noteToViewOrEdit && (
+        <Dialog open={isViewNoteDialogOpen} onOpenChange={(isOpen) => {
+          setIsViewNoteDialogOpen(isOpen);
+          if (!isOpen) {
+            setNoteToViewOrEdit(null);
+            setIsEditingNote(false);
+          }
+        }}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{isEditingNote ? "Edit Catatan" : "Detail Catatan"}</DialogTitle>
+              <DialogDescription>
+                {isEditingNote ? "Ubah konten catatan Anda di bawah ini." : `Catatan dari folder: ${folders.find(f => f.id === noteToViewOrEdit.folderId)?.name || 'Tidak diketahui'}`}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              {isEditingNote ? (
+                <Textarea
+                  value={editedNoteContent}
+                  onChange={(e) => setEditedNoteContent(e.target.value)}
+                  className="min-h-[200px] text-sm"
+                  autoFocus
+                />
+              ) : (
+                <ScrollArea className="max-h-[60vh] w-full rounded-md border p-3 bg-muted/50">
+                  <p className="text-sm text-card-foreground whitespace-pre-wrap">{noteToViewOrEdit.content}</p>
+                </ScrollArea>
+              )}
+            </div>
+            <DialogFooter className="justify-between sm:justify-between">
+              <div>
+                {!isEditingNote ? (
+                  <Button variant="outline" onClick={handleToggleEditNote}>Edit</Button>
+                ) : (
+                  <Button variant="outline" onClick={handleToggleEditNote}>Batal Edit</Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="destructive" onClick={() => handleInitiateDeleteNote(noteToViewOrEdit.id)}>Hapus</Button>
+                 {isEditingNote ? (
+                  <Button onClick={handleSaveEditedNote}>Simpan Perubahan</Button>
+                ) : (
+                  <DialogClose asChild>
+                    <Button type="button">Tutup</Button>
+                  </DialogClose>
+                )}
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Delete Note Confirmation Dialog */}
+      <AlertDialog open={isDeleteNoteConfirmOpen} onOpenChange={setIsDeleteNoteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Hapus Catatan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus catatan ini? Tindakan ini tidak dapat diurungkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setNoteIdToDelete(null)}>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDeleteNote}>Hapus</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 }
