@@ -27,7 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input"; // Added Input
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -63,7 +63,7 @@ export function ChatPage() {
   // State for Save Note Dialog
   const [isSaveNoteDialogOpen, setIsSaveNoteDialogOpen] = useState(false);
   const [noteContentToSave, setNoteContentToSave] = useState<string | null>(null);
-  const [noteNameToSave, setNoteNameToSave] = useState<string>(""); // Added for note name
+  const [noteNameToSave, setNoteNameToSave] = useState<string>("");
   const [selectedFolderForSaving, setSelectedFolderForSaving] = useState<string | null>(null);
 
   // State for View/Edit Note Dialog
@@ -77,13 +77,17 @@ export function ChatPage() {
   const [isDeleteNoteConfirmOpen, setIsDeleteNoteConfirmOpen] = useState(false);
   const [noteIdToDelete, setNoteIdToDelete] = useState<string | null>(null);
 
+  // State for Delete Folder Confirmation Dialog
+  const [isDeleteFolderConfirmOpen, setIsDeleteFolderConfirmOpen] = useState(false);
+  const [folderIdToDelete, setFolderIdToDelete] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (folders.length > 0 && !selectedFolderId) {
       setSelectedFolderId(folders[0].id);
     }
     if (folders.length > 0 && !selectedFolderForSaving) {
-      setSelectedFolderForSaving(folders[0].id);
+      setSelectedFolderForSaving(folders[0]?.id || null);
     }
   }, [folders, selectedFolderId, selectedFolderForSaving]);
 
@@ -94,7 +98,7 @@ export function ChatPage() {
       return;
     }
     const newFolder: Folder = { id: crypto.randomUUID(), name: folderName.trim() };
-    setFolders(prev => [...prev, newFolder]);
+    setFolders(prev => [...prev, newFolder].sort((a, b) => a.name.localeCompare(b.name)));
     setSelectedFolderId(newFolder.id); 
     if (!selectedFolderForSaving) {
         setSelectedFolderForSaving(newFolder.id);
@@ -108,7 +112,9 @@ export function ChatPage() {
       return;
     }
     setNoteContentToSave(content);
-    setNoteNameToSave(""); // Reset note name input
+    // Suggest a name based on the first few words of the content, max 5 words
+    const firstFewWords = content.split(/\s+/).slice(0, 5).join(" ");
+    setNoteNameToSave(firstFewWords || "Catatan Baru");
     setSelectedFolderForSaving(selectedFolderId || folders[0]?.id || null);
     setIsSaveNoteDialogOpen(true);
   };
@@ -124,7 +130,7 @@ export function ChatPage() {
       return;
     }
 
-    const finalNoteName = noteNameToSave.trim() || "Catatan Baru"; // Default name if empty
+    const finalNoteName = noteNameToSave.trim() || "Catatan Baru";
 
     const newNote: Note = {
       id: crypto.randomUUID(),
@@ -238,6 +244,35 @@ export function ChatPage() {
     }
   };
 
+  const handleInitiateDeleteFolder = (folderId: string) => {
+    setFolderIdToDelete(folderId);
+    setIsDeleteFolderConfirmOpen(true);
+  };
+
+  const handleConfirmDeleteFolder = () => {
+    if (!folderIdToDelete) return;
+
+    const folderToDelete = folders.find(f => f.id === folderIdToDelete);
+    if (!folderToDelete) return;
+
+    setNotes(prevNotes => prevNotes.filter(n => n.folderId !== folderIdToDelete));
+    setFolders(prevFolders => prevFolders.filter(f => f.id !== folderIdToDelete));
+
+    toast({ title: "Folder Dihapus", description: `Folder '${folderToDelete.name}' dan semua catatannya berhasil dihapus.`, variant: "destructive" });
+
+    if (selectedFolderId === folderIdToDelete) {
+      const remainingFolders = folders.filter(f => f.id !== folderIdToDelete);
+      setSelectedFolderId(remainingFolders.length > 0 ? remainingFolders[0].id : null);
+    }
+    if (selectedFolderForSaving === folderIdToDelete) {
+      const remainingFolders = folders.filter(f => f.id !== folderIdToDelete);
+      setSelectedFolderForSaving(remainingFolders.length > 0 ? remainingFolders[0].id : null);
+    }
+
+    setFolderIdToDelete(null);
+    setIsDeleteFolderConfirmOpen(false);
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <Sidebar collapsible="icon">
@@ -249,6 +284,7 @@ export function ChatPage() {
             onSelectFolder={setSelectedFolderId}
             onAddFolder={handleAddFolder}
             onViewNote={handleOpenViewNoteDialog}
+            onInitiateDeleteFolder={handleInitiateDeleteFolder}
           />
         </UiSidebarContent>
       </Sidebar>
@@ -410,6 +446,23 @@ export function ChatPage() {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setNoteIdToDelete(null)}>Batal</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDeleteNote} className="bg-destructive hover:bg-destructive/90">Hapus</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Folder Confirmation Dialog */}
+      <AlertDialog open={isDeleteFolderConfirmOpen} onOpenChange={setIsDeleteFolderConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Hapus Folder</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus folder '{folders.find(f => f.id === folderIdToDelete)?.name || ''}'?
+              Tindakan ini akan menghapus semua catatan di dalamnya dan tidak dapat diurungkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setFolderIdToDelete(null)}>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDeleteFolder} className="bg-destructive hover:bg-destructive/90">Hapus Folder</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

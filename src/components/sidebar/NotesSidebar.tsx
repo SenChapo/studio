@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { FolderPlus, Folder as FolderIcon, FileText, ChevronRight, ChevronDown,StickyNote } from 'lucide-react';
+import { FolderPlus, Folder as FolderIcon, FileText, ChevronRight, ChevronDown, StickyNote, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -38,6 +38,7 @@ interface NotesSidebarProps {
   onSelectFolder: (folderId: string) => void;
   onAddFolder: (folderName: string) => void;
   onViewNote: (noteId: string) => void;
+  onInitiateDeleteFolder: (folderId: string) => void; // New prop
 }
 
 export function NotesSidebar({
@@ -47,6 +48,7 @@ export function NotesSidebar({
   onSelectFolder,
   onAddFolder,
   onViewNote,
+  onInitiateDeleteFolder, // New prop
 }: NotesSidebarProps) {
   const [isAddFolderDialogOpen, setIsAddFolderDialogOpen] = useState(false);
   const [newFolderNameDialog, setNewFolderNameDialog] = useState('');
@@ -64,7 +66,6 @@ export function NotesSidebar({
     setExpandedFolders(prev => ({ ...prev, [folderId]: !prev[folderId] }));
   };
 
-  // Sort notes by newest first for each folder
   const filteredNotes = (folderId: string) => notes.filter(note => note.folderId === folderId).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   return (
@@ -146,6 +147,19 @@ export function NotesSidebar({
                     <FolderIcon className={cn("h-4 w-4", isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/80")} />
                     <span className="truncate group-data-[collapsible=icon]:hidden">{folder.name}</span>
                   </SidebarMenuButton>
+                  
+                  <SidebarMenuAction
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onInitiateDeleteFolder(folder.id);
+                      }}
+                      className="group-data-[collapsible=icon]:hidden ml-1 text-sidebar-foreground/60 hover:text-destructive"
+                      aria-label={`Hapus folder ${folder.name}`}
+                      title={`Hapus folder ${folder.name}`}
+                    >
+                    <Trash2 className="h-4 w-4" />
+                  </SidebarMenuAction>
+
                   {notesInFolder.length > 0 && ( 
                      <SidebarMenuAction
                         onClick={(e) => {
@@ -167,7 +181,7 @@ export function NotesSidebar({
                           onClick={() => onViewNote(note.id)}
                           size="sm"
                           className="text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50"
-                          title={note.content} // Full content as tooltip
+                          title={note.name} // Show note name as main tooltip for sub-button
                         >
                           <FileText className="h-3.5 w-3.5 mr-1.5 shrink-0" />
                           <span className="truncate">
