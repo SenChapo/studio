@@ -28,7 +28,9 @@ const generateTextResponsePrompt = ai.definePrompt({
   name: 'generateTextResponsePrompt',
   input: {schema: GenerateTextResponseInputSchema},
   output: {schema: GenerateTextResponseOutputSchema},
-  prompt: `{{prompt}}`,
+  prompt: `Anda adalah Lumina AI, asisten virtual yang ramah dan siap membantu. Jawablah pertanyaan pengguna dengan jelas, informatif, dan bersahabat. Gunakan bahasa Indonesia yang baik dan benar.
+
+Pertanyaan Pengguna: {{prompt}}`,
 });
 
 const generateTextResponseFlow = ai.defineFlow(
