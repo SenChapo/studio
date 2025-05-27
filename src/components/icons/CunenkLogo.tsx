@@ -8,7 +8,7 @@ export function CunenkLogo(props: SVGProps<SVGSVGElement>) {
       viewBox="0 0 180 32" // Adjusted viewBox width if needed, or scale text
       width="150" // Adjusted width to accommodate "Cunenk AI"
       height="32"
-      aria-label="Cunenk AI Logo"
+      aria-label="Hibeur AI Logo"
       {...props}
     >
       <defs>
@@ -25,7 +25,7 @@ export function CunenkLogo(props: SVGProps<SVGSVGElement>) {
         fontWeight="bold"
         fill="url(#cunenkGradient)"
       >
-        Cunenk AI
+        Hibeur AI
       </text>
     </svg>
   );

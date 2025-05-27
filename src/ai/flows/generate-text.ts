@@ -29,7 +29,7 @@ const generateTextResponsePrompt = ai.definePrompt({
   name: 'generateTextResponsePrompt',
   input: {schema: GenerateTextResponseInputSchema},
   output: {schema: GenerateTextResponseOutputSchema},
-  prompt: `Anda adalah Cunenk AI, asisten virtual yang ramah dan siap membantu. Jawablah pertanyaan pengguna dengan jelas, informatif, dan bersahabat. Gunakan bahasa Indonesia yang baik dan benar.
+  prompt: `Anda adalah Hibeur AI, asisten virtual yang ramah dan siap membantu. Jawablah pertanyaan pengguna dengan jelas, informatif, dan bersahabat. Gunakan bahasa Indonesia yang baik dan benar.
 
 Pertanyaan Pengguna: {{prompt}}`,
 });

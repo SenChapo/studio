@@ -372,7 +372,7 @@ export function ChatPage() {
           <ChatMessageList
             messages={messages}
             isLoadingAiResponse={isLoading}
-            loadingText="Cunenk sedang berpikir..."
+            loadingText="Hibeur sedang berpikir..."
             onInitiateSaveNote={handleInitiateSaveNote}
             user={user}
           />

@@ -17,7 +17,7 @@ interface ChatMessageListProps {
   user: User; // Add user prop
 }
 
-export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "Cunenk sedang berpikir...", onInitiateSaveNote, user }: ChatMessageListProps) {
+export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "Hibeur sedang berpikir...", onInitiateSaveNote, user }: ChatMessageListProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -54,7 +54,7 @@ export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "
               <path d="m7 12.5 10 5"/>
               <path d="m7 7.5 10 5"/>
             </svg>
-            <h2 className="text-2xl font-semibold mb-3 text-primary">Selamat Datang di Cunenk AI!</h2>
+            <h2 className="text-2xl font-semibold mb-3 text-primary">Selamat Datang di Hibeur AI!</h2>
             <p className="text-muted-foreground text-base">
               Saya adalah asisten virtual Anda. <br />
               Silakan ajukan pertanyaan atau topik yang ingin Anda diskusikan.

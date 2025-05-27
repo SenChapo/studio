@@ -203,7 +203,7 @@ export function NotesSidebar({
       </ScrollArea>
       
       <UiSidebarFooter className="p-2 mt-auto border-t border-sidebar-border group-data-[collapsible=icon]:hidden sticky bottom-0 bg-sidebar z-10">
-        <p className="text-xs text-sidebar-foreground/50 text-center">Cunenk Notes v0.1</p>
+        <p className="text-xs text-sidebar-foreground/50 text-center">Hibeur Notes v0.1</p>
       </UiSidebarFooter>
     </div>
   );

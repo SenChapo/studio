@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Cunenk AI',
-  description: 'Asisten AI cerdas Cunenk',
+  title: 'Hibeur AI',
+  description: 'Asisten AI cerdas Hibeur',
 };
 
 export default function RootLayout({

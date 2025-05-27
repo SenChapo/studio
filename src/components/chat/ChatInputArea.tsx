@@ -50,7 +50,7 @@ export function ChatInputArea({ onSendMessage, isLoading }: ChatInputAreaProps) 
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Tanya Cunenk AI..."
+        placeholder="Tanya Hibeur AI..."
         className="flex-grow resize-none max-h-40 min-h-[40px] text-base"
         rows={1}
         disabled={isLoading}
