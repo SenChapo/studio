@@ -143,13 +143,13 @@ export function NotesSidebar({
                   )}
                 >
                   <FolderIcon className={cn("h-4 w-4 shrink-0", isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/80")} />
-                  <span className="truncate group-data-[collapsible=icon]:hidden flex-1">{folder.name}</span>
+                  <span className="truncate group-data-[collapsible=icon]:hidden flex-1 min-w-0">{folder.name}</span>
                   
                   {notesInFolder.length > 0 && ( 
                      <span
-                        className="group-data-[collapsible=icon]:hidden p-0.5 rounded hover:bg-sidebar-accent/20 dark:hover:bg-sidebar-accent/50"
+                        className="group-data-[collapsible=icon]:hidden p-0.5 rounded hover:bg-sidebar-accent/20 dark:hover:bg-sidebar-accent/50 shrink-0"
                         onClick={(e) => {
-                          e.stopPropagation();
+                          e.stopPropagation(); // Prevent selecting folder when clicking chevron
                           toggleFolderExpansion(folder.id);
                         }}
                         aria-label={isExpanded ? `Ciutkan folder ${folder.name}` : `Luaskan folder ${folder.name}`}
@@ -183,7 +183,7 @@ export function NotesSidebar({
                           title={note.name} 
                         >
                           <FileText className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-                          <span className="truncate">
+                          <span className="truncate min-w-0">
                             {note.name} 
                           </span>
                         </SidebarMenuSubButton>
