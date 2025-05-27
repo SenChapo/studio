@@ -6,14 +6,18 @@ import type { ChatMessage } from "@/lib/chat-export";
 import { ChatMessageItem } from "./ChatMessageItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+// Define User type to match useMockAuth
+type User = { name: string; avatar: string } | null;
+
 interface ChatMessageListProps {
   messages: ChatMessage[];
   isLoadingAiResponse: boolean;
   loadingText?: string;
   onInitiateSaveNote?: (content: string) => void;
+  user: User; // Add user prop
 }
 
-export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "Cunenk sedang berpikir...", onInitiateSaveNote }: ChatMessageListProps) {
+export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "Cunenk sedang berpikir...", onInitiateSaveNote, user }: ChatMessageListProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -60,7 +64,7 @@ export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "
       ) : (
         <div className="p-4 space-y-2" ref={viewportRef}>
           {messages.map((msg) => (
-            <ChatMessageItem key={msg.id} message={msg} onInitiateSaveNote={onInitiateSaveNote} />
+            <ChatMessageItem key={msg.id} message={msg} onInitiateSaveNote={onInitiateSaveNote} user={user} />
           ))}
           {isLoadingAiResponse && (
             <ChatMessageItem
@@ -71,6 +75,7 @@ export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "
                 content: loadingText,
                 timestamp: new Date(),
               }}
+              user={null} // AI messages don't need user prop for avatar
             />
           )}
         </div>
@@ -78,3 +83,5 @@ export function ChatMessageList({ messages, isLoadingAiResponse, loadingText = "
     </ScrollArea>
   );
 }
+
+    

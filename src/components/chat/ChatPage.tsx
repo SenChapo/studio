@@ -45,13 +45,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FormattedTextRenderer } from '@/components/shared/FormattedTextRenderer'; // Added import
+import { FormattedTextRenderer } from '@/components/shared/FormattedTextRenderer';
+import { useMockAuth } from "@/hooks/useMockAuth";
 
 
 export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useMockAuth(); // Get user from hook
 
   const [folders, setFolders] = useState<Folder[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -247,8 +249,9 @@ export function ChatPage() {
           <ChatMessageList 
             messages={messages} 
             isLoadingAiResponse={isLoading} 
-            loadingText="Lumina sedang berpikir..."
+            loadingText="Cunenk sedang berpikir..."
             onInitiateSaveNote={handleInitiateSaveNote}
+            user={user} // Pass user object
           />
           <ChatInputArea onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>
@@ -384,3 +387,5 @@ export function ChatPage() {
     </SidebarProvider>
   );
 }
+
+    

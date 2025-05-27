@@ -1,14 +1,18 @@
 
 import type { ChatMessage } from "@/lib/chat-export";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added AvatarImage
 import { Bot, User, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FormattedTextRenderer } from "@/components/shared/FormattedTextRenderer"; // Updated import
+import { FormattedTextRenderer } from "@/components/shared/FormattedTextRenderer";
+
+// Define User type to match useMockAuth
+type UserAuth = { name: string; avatar: string } | null;
 
 interface ChatMessageItemProps {
   message: ChatMessage;
   onInitiateSaveNote?: (content: string) => void;
+  user: UserAuth; // Add user prop
 }
 
 const CodeBlock = ({ codeContent }: { codeContent: string }) => {
@@ -19,12 +23,9 @@ const CodeBlock = ({ codeContent }: { codeContent: string }) => {
   );
 };
 
-// TextBlock is now replaced by FormattedTextRenderer directly in the map function
-
-export function ChatMessageItem({ message, onInitiateSaveNote }: ChatMessageItemProps) {
+export function ChatMessageItem({ message, onInitiateSaveNote, user }: ChatMessageItemProps) {
   const isUser = message.role === "user";
   
-  // Split by code blocks, a part is either a code block or a text block
   const parts = message.content.split(/(```(?:[\w-]+)?\n[\s\S]*?\n```)/g).filter(part => part.trim() !== '');
 
   return (
@@ -53,7 +54,6 @@ export function ChatMessageItem({ message, onInitiateSaveNote }: ChatMessageItem
               const codeContent = part.replace(/```(?:[\w-]+)?\n/, "").replace(/\n```$/, "");
               return <CodeBlock key={`${message.id}-code-${index}`} codeContent={codeContent} />;
             }
-            // Use FormattedTextRenderer for text parts
             return <FormattedTextRenderer key={`${message.id}-text-${index}`} content={part} />;
           })}
         </div>
@@ -80,9 +80,16 @@ export function ChatMessageItem({ message, onInitiateSaveNote }: ChatMessageItem
       </div>
       {isUser && (
         <Avatar className="h-8 w-8 shrink-0 border">
-          <AvatarFallback><User className="h-5 w-5 text-muted-foreground" /></AvatarFallback>
+          {user?.avatar && (
+            <AvatarImage src={user.avatar} alt={user.name || "User"} data-ai-hint="chat avatar" />
+          )}
+          <AvatarFallback>
+            {user?.name ? user.name.charAt(0).toUpperCase() : <User className="h-5 w-5 text-muted-foreground" />}
+          </AvatarFallback>
         </Avatar>
       )}
     </div>
   );
 }
+
+    
