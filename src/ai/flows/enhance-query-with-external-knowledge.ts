@@ -16,7 +16,7 @@ const EnhanceQueryWithExternalKnowledgeInputSchema = z.object({
 export type EnhanceQueryWithExternalKnowledgeInput = z.infer<typeof EnhanceQueryWithExternalKnowledgeInputSchema>;
 
 const EnhanceQueryWithExternalKnowledgeOutputSchema = z.object({
-  enhancedQuery: z.string().describe('The enhanced query with external knowledge.'),
+  enhancedQuery: z.string().describe('The enhanced query with external knowledge, or the original query if no enhancement was beneficial.'),
 });
 export type EnhanceQueryWithExternalKnowledgeOutput = z.infer<typeof EnhanceQueryWithExternalKnowledgeOutputSchema>;
 
@@ -26,33 +26,42 @@ export async function enhanceQueryWithExternalKnowledge(input: EnhanceQueryWithE
 
 const shouldEnhanceQuery = ai.defineTool({
   name: 'shouldEnhanceQuery',
-  description: 'Determines whether the user query would benefit from being enhanced with external knowledge.',
+  description: 'Determines whether the user query would benefit from being enhanced with external knowledge. Avoid enhancing simple greetings or very short non-questions.',
   inputSchema: z.object({
     query: z.string().describe('The user query.'),
   }),
   outputSchema: z.boolean().describe('Whether the query should be enhanced.'),
 },
-async (input) => {
-    // Implement logic to determine if external knowledge would benefit the query
-    // For example, check if the query is ambiguous or requires specific factual information
-    // This is a placeholder implementation - replace with your actual logic
-    return input.query.length < 20; // Enhance if the query is short
+async ({ query }) => {
+  const normalizedQuery = query.toLowerCase().trim();
+  const greetings = ['halo', 'hai', 'hi', 'selamat pagi', 'selamat siang', 'selamat sore', 'selamat malam', 'pagi', 'siang', 'sore', 'malam', 'hei', 'helo'];
+  
+  if (greetings.includes(normalizedQuery)) {
+    return false; // Don't enhance simple greetings
   }
+  // Avoid enhancing very short queries that are not questions
+  if (normalizedQuery.length < 10 && !normalizedQuery.includes('?')) {
+    return false; 
+  }
+  // Placeholder: More sophisticated logic could check for keywords implying need for external data.
+  // For now, enhance if it's potentially a question or a longer statement.
+  return normalizedQuery.length >= 10 || normalizedQuery.includes('?');
+}
 );
 
 const getExternalKnowledge = ai.defineTool({
   name: 'getExternalKnowledge',
-  description: 'Retrieves relevant information from external knowledge sources to enhance the user query.',
+  description: 'Retrieves relevant information from external knowledge sources to enhance the user query. This should only be called if `shouldEnhanceQuery` indicates enhancement is beneficial.',
   inputSchema: z.object({
     query: z.string().describe('The user query to retrieve external knowledge for.'),
   }),
   outputSchema: z.string().describe('The relevant external knowledge.'),
 },
 async (input) => {
-    // Implement logic to retrieve external knowledge based on the query
-    // This could involve querying a database, searching the web, or accessing an API
     // This is a placeholder implementation - replace with your actual logic
-    return `External knowledge for query: ${input.query}`;
+    // to query a database, search the web, or access an API.
+    // For example, you might search for financial data, product details, or news articles.
+    return `Informasi tambahan terkait: "${input.query}"`;
   }
 );
 
@@ -61,15 +70,14 @@ const enhanceQueryPrompt = ai.definePrompt({
   tools: [shouldEnhanceQuery, getExternalKnowledge],
   input: {schema: EnhanceQueryWithExternalKnowledgeInputSchema},
   output: {schema: EnhanceQueryWithExternalKnowledgeOutputSchema},
-  prompt: `You are an AI assistant that enhances user queries with external knowledge when it is beneficial. 
+  prompt: `You are an AI assistant. Your task is to analyze the user's query: "{{{query}}}".
+First, use the 'shouldEnhanceQuery' tool to determine if this query would benefit from external knowledge.
+- If 'shouldEnhanceQuery' returns true: Use the 'getExternalKnowledge' tool to retrieve relevant information based on the original query "{{{query}}}". Then, formulate an 'enhancedQuery' by integrating this external knowledge with the original query in a natural way. The enhanced query should still be a coherent question or statement.
+- If 'shouldEnhanceQuery' returns false: The 'enhancedQuery' MUST be exactly the same as the original query: "{{{query}}}".
 
-  First, determine if the query would benefit from external knowledge using the shouldEnhanceQuery tool.
-  If it would, use the getExternalKnowledge tool to retrieve relevant information.
-  Finally, generate an enhanced query that incorporates the external knowledge.
-
-  Query: {{{query}}}
-
-  Enhanced Query: `,
+Return ONLY the 'enhancedQuery' in the specified output format.
+Original Query: {{{query}}}
+`,
 });
 
 const enhanceQueryWithExternalKnowledgeFlow = ai.defineFlow(
@@ -80,6 +88,10 @@ const enhanceQueryWithExternalKnowledgeFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await enhanceQueryPrompt(input);
-    return output!;
+    // Ensure output is not null or undefined. If it is, fall back to original query.
+    if (output && output.enhancedQuery) {
+        return output;
+    }
+    return { enhancedQuery: input.query }; // Fallback
   }
 );
