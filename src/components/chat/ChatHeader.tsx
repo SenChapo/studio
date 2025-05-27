@@ -101,7 +101,7 @@ export function ChatHeader({ messages }: ChatHeaderProps) {
     <>
       <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm">
         <div className="flex items-center gap-2">
-          <SidebarTrigger className="md:hidden"> {/* Hidden on md and up as sidebar is collapsible by icon */}
+          <SidebarTrigger> {/* Removed md:hidden to make it always visible */}
              <PanelLeft className="h-5 w-5"/>
           </SidebarTrigger>
           <CunenkLogo />
