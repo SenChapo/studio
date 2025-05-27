@@ -14,9 +14,10 @@ export interface Folder {
 export interface Note {
   id: string;
   folderId: string;
-  name: string; // Added name property
+  name: string;
   content: string;
-  timestamp: Date;
+  timestamp: Date; // Creation timestamp
+  lastEditedTimestamp?: Date; // Last edited timestamp
 }
 
 export const exportChatAsTxt = (messages: ChatMessage[], lang: string = 'id'): void => {
@@ -55,3 +56,4 @@ export const exportChatAsJson = (messages: ChatMessage[], lang: string = 'id'): 
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
+

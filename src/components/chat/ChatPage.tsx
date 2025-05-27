@@ -112,7 +112,6 @@ export function ChatPage() {
       return;
     }
     setNoteContentToSave(content);
-    // Suggest a name based on the first few words of the content, max 5 words
     const firstFewWords = content.split(/\s+/).slice(0, 5).join(" ");
     setNoteNameToSave(firstFewWords || "Catatan Baru");
     setSelectedFolderForSaving(selectedFolderId || folders[0]?.id || null);
@@ -137,7 +136,8 @@ export function ChatPage() {
       folderId: selectedFolderForSaving,
       name: finalNoteName,
       content: noteContentToSave,
-      timestamp: new Date(),
+      timestamp: new Date(), // Creation timestamp
+      // lastEditedTimestamp is initially undefined
     };
     setNotes(prev => [...prev, newNote]);
     toast({ title: "Sukses", description: `Catatan '${finalNoteName}' ditambahkan ke folder '${targetFolder.name}'.` });
@@ -217,10 +217,20 @@ export function ChatPage() {
       const finalEditedName = editedNoteName.trim() || "Catatan Tanpa Judul";
       setNotes(prevNotes => 
         prevNotes.map(n => 
-          n.id === noteToViewOrEdit.id ? { ...n, name: finalEditedName, content: editedNoteContent, timestamp: new Date() } : n
+          n.id === noteToViewOrEdit.id ? { 
+            ...n, 
+            name: finalEditedName, 
+            content: editedNoteContent, 
+            lastEditedTimestamp: new Date() // Update last edited timestamp
+          } : n
         )
       );
-      setNoteToViewOrEdit(prev => prev ? {...prev, name: finalEditedName, content: editedNoteContent, timestamp: new Date()} : null);
+      setNoteToViewOrEdit(prev => prev ? {
+        ...prev, 
+        name: finalEditedName, 
+        content: editedNoteContent, 
+        lastEditedTimestamp: new Date()
+      } : null);
       setIsEditingNote(false);
       toast({ title: "Sukses", description: "Catatan berhasil diperbarui." });
     }
@@ -272,6 +282,18 @@ export function ChatPage() {
     setFolderIdToDelete(null);
     setIsDeleteFolderConfirmOpen(false);
   };
+
+  const formatTimestamp = (date: Date | undefined) => {
+    if (!date) return '';
+    return new Date(date).toLocaleString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -379,10 +401,18 @@ export function ChatPage() {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>{isEditingNote ? "Edit Catatan" : noteToViewOrEdit.name}</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-xs">
                 {isEditingNote 
                   ? "Ubah nama dan konten catatan Anda di bawah ini." 
-                  : `Folder: ${folders.find(f => f.id === noteToViewOrEdit.folderId)?.name || 'Tidak diketahui'}. Disimpan: ${new Date(noteToViewOrEdit.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                  : (
+                    <>
+                      <div>Folder: {folders.find(f => f.id === noteToViewOrEdit.folderId)?.name || 'Tidak diketahui'}</div>
+                      <div>Dibuat: {formatTimestamp(noteToViewOrEdit.timestamp)}</div>
+                      {noteToViewOrEdit.lastEditedTimestamp && (
+                        <div>Terakhir Diedit: {formatTimestamp(noteToViewOrEdit.lastEditedTimestamp)}</div>
+                      )}
+                    </>
+                  )
                 }
               </DialogDescription>
             </DialogHeader>
@@ -469,3 +499,4 @@ export function ChatPage() {
     </SidebarProvider>
   );
 }
+
