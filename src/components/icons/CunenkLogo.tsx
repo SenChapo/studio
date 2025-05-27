@@ -5,8 +5,8 @@ export function CunenkLogo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 180 32"
-      width="120"
+      viewBox="0 0 180 32" // Adjusted viewBox width if needed, or scale text
+      width="150" // Adjusted width to accommodate "Cunenk AI"
       height="32"
       aria-label="Cunenk AI Logo"
       {...props}
@@ -25,17 +25,7 @@ export function CunenkLogo(props: SVGProps<SVGSVGElement>) {
         fontWeight="bold"
         fill="url(#cunenkGradient)"
       >
-        Cunenk
-      </text>
-      <text
-        x="125"
-        y="24"
-        fontFamily="var(--font-geist-sans), system-ui, sans-serif"
-        fontSize="28"
-        fontWeight="normal"
-        fill="hsl(var(--foreground))"
-      >
-        AI
+        Cunenk AI
       </text>
     </svg>
   );
