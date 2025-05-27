@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { FolderPlus, Folder as FolderIcon, FileText, ChevronRight, ChevronDown } from 'lucide-react';
+import { FolderPlus, Folder as FolderIcon, FileText, ChevronRight, ChevronDown,StickyNote } from 'lucide-react'; // Added StickyNote
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -64,20 +64,23 @@ export function NotesSidebar({
     setExpandedFolders(prev => ({ ...prev, [folderId]: !prev[folderId] }));
   };
 
+  // Sort notes by newest first for each folder
   const filteredNotes = (folderId: string) => notes.filter(note => note.folderId === folderId).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   return (
     <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
-      <UiSidebarHeader className="p-2 flex items-center justify-between">
-        <h2 className="text-lg font-semibold px-2 text-sidebar-primary group-data-[collapsible=icon]:hidden">Manajer Catatan</h2>
-        <FolderIcon className="h-6 w-6 text-sidebar-primary hidden group-data-[collapsible=icon]:block mx-auto" />
+      <UiSidebarHeader className="p-2 flex items-center justify-between sticky top-0 bg-sidebar z-10">
+        <div className="flex items-center gap-2">
+          <StickyNote className="h-6 w-6 text-sidebar-primary group-data-[collapsible=icon]:mx-auto" />
+          <h2 className="text-lg font-semibold text-sidebar-primary group-data-[collapsible=icon]:hidden">Manajer Catatan</h2>
+        </div>
         
         <Dialog open={isAddFolderDialogOpen} onOpenChange={setIsAddFolderDialogOpen}>
           <DialogTrigger asChild>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 group-data-[collapsible=icon]:mx-auto text-sidebar-primary hover:bg-sidebar-primary/10 hover:text-sidebar-primary"
+              className="h-8 w-8 text-sidebar-primary hover:bg-sidebar-primary/10 hover:text-sidebar-primary group-data-[collapsible=icon]:mx-auto"
               title="Tambah Folder Baru"
             >
               <FolderPlus className="h-5 w-5" />
@@ -99,6 +102,7 @@ export function NotesSidebar({
                 onChange={(e) => setNewFolderNameDialog(e.target.value)}
                 className="col-span-3"
                 onKeyPress={(e) => e.key === 'Enter' && handleAddFolderSubmit()}
+                autoFocus
               />
             </div>
             <DialogFooter>
@@ -119,7 +123,7 @@ export function NotesSidebar({
         <SidebarMenu className="px-2 py-2">
           {folders.length === 0 && (
             <p className="p-4 text-sm text-center text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
-              Belum ada folder. Klik tombol <FolderPlus className="inline h-4 w-4 mx-1" /> untuk membuat folder baru.
+              Belum ada folder. Klik <FolderPlus className="inline h-4 w-4 mx-0.5" /> untuk membuat.
             </p>
           )}
           {folders.map((folder) => {
@@ -129,29 +133,32 @@ export function NotesSidebar({
             
             return (
               <SidebarMenuItem key={folder.id}>
-                <SidebarMenuButton
-                  onClick={() => onSelectFolder(folder.id)}
-                  isActive={isActive}
-                  tooltip={{ children: folder.name, side: 'right', align: 'start', className:"bg-card text-card-foreground border-border" }}
-                  className={cn(
-                    isActive ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                <div className="flex items-center w-full">
+                  <SidebarMenuButton
+                    onClick={() => onSelectFolder(folder.id)}
+                    isActive={isActive}
+                    tooltip={{ children: folder.name, side: 'right', align: 'start', className:"bg-card text-card-foreground border-border" }}
+                    className={cn(
+                      "flex-grow", // Ensure button takes available space
+                      isActive ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    )}
+                  >
+                    <FolderIcon className={cn("h-4 w-4", isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/80")} />
+                    <span className="truncate group-data-[collapsible=icon]:hidden">{folder.name}</span>
+                  </SidebarMenuButton>
+                  {notesInFolder.length > 0 && ( // Only show toggle if there are notes
+                     <SidebarMenuAction
+                        onClick={(e) => {
+                          e.stopPropagation(); 
+                          toggleFolderExpansion(folder.id);
+                        }}
+                        className="group-data-[collapsible=icon]:hidden ml-1" // Added margin for spacing
+                        aria-label={isExpanded ? `Ciutkan folder ${folder.name}` : `Luaskan folder ${folder.name}`}
+                      >
+                      {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </SidebarMenuAction>
                   )}
-                >
-                  <FolderIcon className={cn("h-4 w-4", isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/80")} />
-                  <span className="truncate group-data-[collapsible=icon]:hidden">{folder.name}</span>
-                </SidebarMenuButton>
-                {notesInFolder.length > 0 && (
-                   <SidebarMenuAction
-                      onClick={(e) => {
-                        e.stopPropagation(); 
-                        toggleFolderExpansion(folder.id);
-                      }}
-                      className="group-data-[collapsible=icon]:hidden"
-                      aria-label={isExpanded ? `Ciutkan folder ${folder.name}` : `Luaskan folder ${folder.name}`}
-                    >
-                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  </SidebarMenuAction>
-                )}
+                </div>
                  {isExpanded && notesInFolder.length > 0 && (
                   <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
                     {notesInFolder.map((note) => (
@@ -159,10 +166,10 @@ export function NotesSidebar({
                         <SidebarMenuSubButton 
                           onClick={() => onViewNote(note.id)}
                           size="sm"
-                          className="text-sidebar-foreground/80 hover:text-sidebar-accent-foreground"
-                          title={note.content}
+                          className="text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50"
+                          title={note.content} // Full content as tooltip
                         >
-                          <FileText className="h-3.5 w-3.5" />
+                          <FileText className="h-3.5 w-3.5 mr-1.5 shrink-0" />
                           <span className="truncate">
                             {note.content.substring(0, 25) + (note.content.length > 25 ? '...' : '')}
                           </span>
@@ -171,8 +178,8 @@ export function NotesSidebar({
                     ))}
                   </SidebarMenuSub>
                 )}
-                {isExpanded && notesInFolder.length === 0 && (
-                    <p className="pl-8 pr-2 py-1 text-xs text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
+                {isExpanded && notesInFolder.length === 0 && ( // Show if expanded and no notes
+                    <p className="pl-[calc(theme(spacing.3)_+_1rem)] pr-2 py-1 text-xs text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden italic">
                         Folder ini kosong.
                     </p>
                 )}
@@ -182,7 +189,7 @@ export function NotesSidebar({
         </SidebarMenu>
       </ScrollArea>
       
-      <UiSidebarFooter className="p-2 mt-auto border-t border-sidebar-border group-data-[collapsible=icon]:hidden">
+      <UiSidebarFooter className="p-2 mt-auto border-t border-sidebar-border group-data-[collapsible=icon]:hidden sticky bottom-0 bg-sidebar z-10">
         <p className="text-xs text-sidebar-foreground/50 text-center">Lumina Notes v0.1</p>
       </UiSidebarFooter>
     </div>

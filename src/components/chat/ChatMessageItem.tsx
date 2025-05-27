@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bot, User, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FormattedTextRenderer } from "@/components/shared/FormattedTextRenderer"; // Updated import
 
 interface ChatMessageItemProps {
   message: ChatMessage;
@@ -18,26 +19,12 @@ const CodeBlock = ({ codeContent }: { codeContent: string }) => {
   );
 };
 
-const TextBlock = ({ textContent }: { textContent: string }) => {
-  const paragraphs = textContent.split(/(\n\s*\n)/).map((paragraph, index) => {
-    if (paragraph.match(/(\n\s*\n)/)) {
-      return <div key={`sep-${index}`} className="h-2"></div>;
-    }
-    if (paragraph.trim() === '') return null;
-    return (
-      <p key={index} className="whitespace-pre-wrap leading-relaxed">
-        {paragraph}
-      </p>
-    );
-  }).filter(Boolean);
-  
-  return <>{paragraphs}</>;
-};
-
+// TextBlock is now replaced by FormattedTextRenderer directly in the map function
 
 export function ChatMessageItem({ message, onInitiateSaveNote }: ChatMessageItemProps) {
   const isUser = message.role === "user";
   
+  // Split by code blocks, a part is either a code block or a text block
   const parts = message.content.split(/(```(?:[\w-]+)?\n[\s\S]*?\n```)/g).filter(part => part.trim() !== '');
 
   return (
@@ -66,7 +53,8 @@ export function ChatMessageItem({ message, onInitiateSaveNote }: ChatMessageItem
               const codeContent = part.replace(/```(?:[\w-]+)?\n/, "").replace(/\n```$/, "");
               return <CodeBlock key={`${message.id}-code-${index}`} codeContent={codeContent} />;
             }
-            return <TextBlock key={`${message.id}-text-${index}`} textContent={part} />;
+            // Use FormattedTextRenderer for text parts
+            return <FormattedTextRenderer key={`${message.id}-text-${index}`} content={part} />;
           })}
         </div>
         <div className="flex justify-between items-center mt-2">

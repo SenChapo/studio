@@ -45,6 +45,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { FormattedTextRenderer } from '@/components/shared/FormattedTextRenderer'; // Added import
 
 
 export function ChatPage() {
@@ -259,17 +260,15 @@ export function ChatPage() {
           <DialogHeader>
             <DialogTitle>Simpan Catatan ke Folder</DialogTitle>
             <DialogDescription>
-              Pilih folder tujuan untuk menyimpan catatan ini.
+              Pilih folder tujuan dan pratinjau catatan Anda sebelum menyimpan.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {noteContentToSave && (
               <div className="space-y-1">
                 <Label htmlFor="noteContentPreview">Isi Catatan (pratinjau):</Label>
-                <ScrollArea className="max-h-20 w-full rounded-md border p-2 bg-muted/50">
-                  <p id="noteContentPreview" className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {noteContentToSave}
-                  </p>
+                <ScrollArea className="max-h-28 w-full rounded-md border p-2 bg-muted/50 text-sm">
+                  <FormattedTextRenderer content={noteContentToSave} className="text-muted-foreground" />
                 </ScrollArea>
               </div>
             )}
@@ -324,7 +323,10 @@ export function ChatPage() {
             <DialogHeader>
               <DialogTitle>{isEditingNote ? "Edit Catatan" : "Detail Catatan"}</DialogTitle>
               <DialogDescription>
-                {isEditingNote ? "Ubah konten catatan Anda di bawah ini." : `Catatan dari folder: ${folders.find(f => f.id === noteToViewOrEdit.folderId)?.name || 'Tidak diketahui'}`}
+                {isEditingNote 
+                  ? "Ubah konten catatan Anda di bawah ini." 
+                  : `Catatan dari folder: ${folders.find(f => f.id === noteToViewOrEdit.folderId)?.name || 'Tidak diketahui'}. Disimpan pada: ${new Date(noteToViewOrEdit.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                }
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -332,25 +334,25 @@ export function ChatPage() {
                 <Textarea
                   value={editedNoteContent}
                   onChange={(e) => setEditedNoteContent(e.target.value)}
-                  className="min-h-[200px] text-sm"
+                  className="min-h-[200px] max-h-[60vh] text-sm resize-y"
                   autoFocus
                 />
               ) : (
                 <ScrollArea className="max-h-[60vh] w-full rounded-md border p-3 bg-muted/50">
-                  <p className="text-sm text-card-foreground whitespace-pre-wrap">{noteToViewOrEdit.content}</p>
+                  <FormattedTextRenderer content={noteToViewOrEdit.content} className="text-sm text-card-foreground" />
                 </ScrollArea>
               )}
             </div>
-            <DialogFooter className="justify-between sm:justify-between">
+            <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2">
               <div>
                 {!isEditingNote ? (
-                  <Button variant="outline" onClick={handleToggleEditNote}>Edit</Button>
+                  <Button variant="outline" onClick={handleToggleEditNote}>Edit Catatan</Button>
                 ) : (
                   <Button variant="outline" onClick={handleToggleEditNote}>Batal Edit</Button>
                 )}
               </div>
-              <div className="flex gap-2">
-                <Button variant="destructive" onClick={() => handleInitiateDeleteNote(noteToViewOrEdit.id)}>Hapus</Button>
+              <div className="flex flex-col-reverse sm:flex-row gap-2">
+                <Button variant="destructive" onClick={() => handleInitiateDeleteNote(noteToViewOrEdit.id)}>Hapus Catatan</Button>
                  {isEditingNote ? (
                   <Button onClick={handleSaveEditedNote}>Simpan Perubahan</Button>
                 ) : (
@@ -375,7 +377,7 @@ export function ChatPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setNoteIdToDelete(null)}>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDeleteNote}>Hapus</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirmDeleteNote} className="bg-destructive hover:bg-destructive/90">Hapus</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
