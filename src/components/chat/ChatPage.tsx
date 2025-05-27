@@ -23,7 +23,6 @@ export function ChatPage() {
 
   const [folders, setFolders] = useState<Folder[]>([
     { id: 'folder-1', name: 'Catatan Umum' },
-    { id: 'folder-2', name: 'Ide Proyek' },
   ]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(folders[0]?.id || null);
