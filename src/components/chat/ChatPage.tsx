@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChatHeader } from './ChatHeader';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInputArea } from './ChatInputArea';
-import type { ChatMessage, Folder, Note } from '@/lib/chat-export';
+import type { ChatMessage, Folder, Note, ChatSession } from '@/lib/chat-export';
 import { getAiResponse } from '@/app/actions';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -52,6 +52,9 @@ import { useMockAuth } from "@/hooks/useMockAuth";
 
 const FOLDERS_STORAGE_KEY = 'hibeurFolders';
 const NOTES_STORAGE_KEY = 'hibeurNotes';
+const CHAT_SESSIONS_STORAGE_KEY = 'hibeurChatSessions';
+const CURRENT_CHAT_SESSION_KEY = 'hibeurCurrentChatSession';
+
 
 export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -63,73 +66,129 @@ export function ChatPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
-  // State for Save Note Dialog
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [activeChatSessionId, setActiveChatSessionId] = useState<string | null>(null);
+  const [isViewingSavedChat, setIsViewingSavedChat] = useState(false);
+  const [currentChatTitle, setCurrentChatTitle] = useState<string | null>(null);
+
+
   const [isSaveNoteDialogOpen, setIsSaveNoteDialogOpen] = useState(false);
   const [noteContentToSave, setNoteContentToSave] = useState<string | null>(null);
   const [noteNameToSave, setNoteNameToSave] = useState<string>("");
   const [selectedFolderForSaving, setSelectedFolderForSaving] = useState<string | null>(null);
 
-  // State for View/Edit Note Dialog
+  const [isSaveChatDialogOpen, setIsSaveChatDialogOpen] = useState(false);
+  const [chatSessionNameToSave, setChatSessionNameToSave] = useState("");
+
   const [isViewNoteDialogOpen, setIsViewNoteDialogOpen] = useState(false);
   const [noteToViewOrEdit, setNoteToViewOrEdit] = useState<Note | null>(null);
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [editedNoteName, setEditedNoteName] = useState('');
   const [editedNoteContent, setEditedNoteContent] = useState('');
 
-  // State for Delete Note Confirmation Dialog
   const [isDeleteNoteConfirmOpen, setIsDeleteNoteConfirmOpen] = useState(false);
   const [noteIdToDelete, setNoteIdToDelete] = useState<string | null>(null);
 
-  // State for Delete Folder Confirmation Dialog
   const [isDeleteFolderConfirmOpen, setIsDeleteFolderConfirmOpen] = useState(false);
   const [folderIdToDelete, setFolderIdToDelete] = useState<string | null>(null);
 
-  // Load data from localStorage on mount
+  const [isDeleteChatSessionConfirmOpen, setIsDeleteChatSessionConfirmOpen] = useState(false);
+  const [chatSessionIdToDelete, setChatSessionIdToDelete] = useState<string | null>(null);
+
+  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+
+
   useEffect(() => {
+    // Load Folders
     const storedFoldersRaw = localStorage.getItem(FOLDERS_STORAGE_KEY);
     if (storedFoldersRaw) {
       try {
-        const storedFolders = JSON.parse(storedFoldersRaw) as Folder[];
-        setFolders(storedFolders);
+        setFolders(JSON.parse(storedFoldersRaw) as Folder[]);
       } catch (error) {
         console.error("Error parsing stored folders:", error);
-        localStorage.removeItem(FOLDERS_STORAGE_KEY); // Clear corrupted data
+        localStorage.removeItem(FOLDERS_STORAGE_KEY);
       }
     }
 
+    // Load Notes
     const storedNotesRaw = localStorage.getItem(NOTES_STORAGE_KEY);
     if (storedNotesRaw) {
       try {
         const parsedNotes = JSON.parse(storedNotesRaw) as Note[];
-        // Convert string timestamps back to Date objects
-        const notesWithDates = parsedNotes.map(note => ({
+        setNotes(parsedNotes.map(note => ({
           ...note,
           timestamp: new Date(note.timestamp),
           lastEditedTimestamp: note.lastEditedTimestamp ? new Date(note.lastEditedTimestamp) : undefined,
-        }));
-        setNotes(notesWithDates);
+        })));
       } catch (error) {
         console.error("Error parsing stored notes:", error);
-        localStorage.removeItem(NOTES_STORAGE_KEY); // Clear corrupted data
+        localStorage.removeItem(NOTES_STORAGE_KEY);
       }
     }
+
+    // Load Chat Sessions (from localStorage)
+    const storedChatSessionsRaw = localStorage.getItem(CHAT_SESSIONS_STORAGE_KEY);
+    if (storedChatSessionsRaw) {
+        try {
+            const parsedSessions = JSON.parse(storedChatSessionsRaw) as ChatSession[];
+            setChatSessions(parsedSessions.map(session => ({
+                ...session,
+                timestamp: new Date(session.timestamp),
+                messages: session.messages.map(msg => ({ ...msg, timestamp: new Date(msg.timestamp) }))
+            })));
+        } catch (error) {
+            console.error("Error parsing stored chat sessions:", error);
+            localStorage.removeItem(CHAT_SESSIONS_STORAGE_KEY);
+        }
+    }
+    
+    // Load current chat messages (from sessionStorage)
+    const storedCurrentChatRaw = sessionStorage.getItem(CURRENT_CHAT_SESSION_KEY);
+    if (storedCurrentChatRaw) {
+        try {
+            const parsedMessages = JSON.parse(storedCurrentChatRaw) as ChatMessage[];
+            setMessages(parsedMessages.map(msg => ({ ...msg, timestamp: new Date(msg.timestamp) })));
+        } catch (error) {
+            console.error("Error parsing current chat session from sessionStorage:", error);
+            sessionStorage.removeItem(CURRENT_CHAT_SESSION_KEY);
+        }
+    }
+
+
+    setIsInitialLoadComplete(true);
   }, []);
 
-  // Save folders to localStorage whenever they change
   useEffect(() => {
-    // Only save if folders array is not in its initial empty state due to no loading,
-    // or if there was something in localStorage previously (to allow saving an empty array after deletion)
+    if (!isInitialLoadComplete) return;
     if (folders.length > 0 || localStorage.getItem(FOLDERS_STORAGE_KEY) !== null) {
        localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(folders));
     }
-  }, [folders]);
+  }, [folders, isInitialLoadComplete]);
 
-  // Save notes to localStorage whenever they change
   useEffect(() => {
+    if (!isInitialLoadComplete) return;
     if (notes.length > 0 || localStorage.getItem(NOTES_STORAGE_KEY) !== null) {
         localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
     }
-  }, [notes]);
+  }, [notes, isInitialLoadComplete]);
+
+  useEffect(() => {
+    if (!isInitialLoadComplete) return;
+    if (chatSessions.length > 0 || localStorage.getItem(CHAT_SESSIONS_STORAGE_KEY) !== null) {
+      localStorage.setItem(CHAT_SESSIONS_STORAGE_KEY, JSON.stringify(chatSessions));
+    } else if (chatSessions.length === 0 && localStorage.getItem(CHAT_SESSIONS_STORAGE_KEY) !== null) {
+      localStorage.removeItem(CHAT_SESSIONS_STORAGE_KEY);
+    }
+  }, [chatSessions, isInitialLoadComplete]);
+  
+  useEffect(() => {
+    if (!isInitialLoadComplete || isViewingSavedChat) return; // Don't save to sessionStorage if viewing saved chat
+    if (messages.length > 0 || sessionStorage.getItem(CURRENT_CHAT_SESSION_KEY) !== null) {
+      sessionStorage.setItem(CURRENT_CHAT_SESSION_KEY, JSON.stringify(messages));
+    } else if (messages.length === 0 && sessionStorage.getItem(CURRENT_CHAT_SESSION_KEY) !== null) {
+      sessionStorage.removeItem(CURRENT_CHAT_SESSION_KEY);
+    }
+  }, [messages, isInitialLoadComplete, isViewingSavedChat]);
 
 
   useEffect(() => {
@@ -149,8 +208,8 @@ export function ChatPage() {
     }
     const newFolder: Folder = { id: crypto.randomUUID(), name: folderName.trim() };
     setFolders(prev => [...prev, newFolder].sort((a, b) => a.name.localeCompare(b.name)));
-    setSelectedFolderId(newFolder.id); // Select the new folder
-    if (!selectedFolderForSaving || folders.length === 0) { // If no folder was selected for saving or no folders existed
+    setSelectedFolderId(newFolder.id); 
+    if (!selectedFolderForSaving || folders.length === 0) { 
         setSelectedFolderForSaving(newFolder.id);
     }
     toast({ title: "Sukses", description: `Folder '${newFolder.name}' berhasil ditambahkan.` });
@@ -162,15 +221,17 @@ export function ChatPage() {
       return;
     }
     setNoteContentToSave(content);
-    const firstFewWords = content.split(/\s+/).slice(0, 5).join(" ");
-    setNoteNameToSave(firstFewWords || "Catatan Baru");
-    // Default to currently selected folder, or first folder if none selected (or if selected is invalid)
+    setNoteNameToSave(""); // Kosongkan nama catatan awal
     const currentValidFolder = folders.find(f => f.id === selectedFolderId);
     setSelectedFolderForSaving(currentValidFolder ? currentValidFolder.id : (folders[0]?.id || null));
     setIsSaveNoteDialogOpen(true);
   };
 
   const handleConfirmSaveNote = () => {
+    if (!noteNameToSave.trim()) {
+        toast({ title: "Nama Catatan Kosong", description: "Nama catatan tidak boleh kosong.", variant: "destructive" });
+        return; 
+    }
     if (!noteContentToSave || !selectedFolderForSaving) {
       toast({ title: "Error", description: "Konten catatan atau folder tujuan tidak valid.", variant: "destructive" });
       return;
@@ -181,7 +242,7 @@ export function ChatPage() {
       return;
     }
 
-    const finalNoteName = noteNameToSave.trim() || "Catatan Tanpa Judul";
+    const finalNoteName = noteNameToSave.trim(); // Nama sudah divalidasi
 
     const newNote: Note = {
       id: crypto.randomUUID(),
@@ -189,7 +250,7 @@ export function ChatPage() {
       name: finalNoteName,
       content: noteContentToSave,
       timestamp: new Date(), 
-      // lastEditedTimestamp is initially undefined
+      lastEditedTimestamp: undefined,
     };
     setNotes(prev => [...prev, newNote]);
     toast({ title: "Sukses", description: `Catatan '${finalNoteName}' ditambahkan ke folder '${targetFolder.name}'.` });
@@ -199,6 +260,8 @@ export function ChatPage() {
   };
 
   const handleSendMessage = async (prompt: string) => {
+    if (isViewingSavedChat) return; 
+
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -228,7 +291,7 @@ export function ChatPage() {
       const errorMessage = error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui.";
       toast({
         title: "Error",
-        description: `Gagal mendapatkan respon AI: ${errorMessage}`,
+        description: `Gagal mendapatkan respon Hibeur AI: ${errorMessage}`,
         variant: "destructive",
       });
       const errorAiMessage: ChatMessage = {
@@ -257,8 +320,7 @@ export function ChatPage() {
   const handleToggleEditNote = () => {
     if (noteToViewOrEdit) {
       setIsEditingNote(!isEditingNote);
-      if (isEditingNote) { // Was editing, now viewing
-        // Reset changes if cancelling edit
+      if (isEditingNote) { 
         setEditedNoteName(noteToViewOrEdit.name);
         setEditedNoteContent(noteToViewOrEdit.content);
       }
@@ -278,7 +340,6 @@ export function ChatPage() {
           } : n
         )
       );
-      // Update the noteToViewOrEdit state as well to reflect changes immediately in the dialog
       setNoteToViewOrEdit(prev => prev ? {
         ...prev,
         name: finalEditedName,
@@ -301,7 +362,6 @@ export function ChatPage() {
       toast({ title: "Sukses", description: "Catatan berhasil dihapus.", variant: "destructive" });
       setNoteIdToDelete(null);
       setIsDeleteNoteConfirmOpen(false);
-      // If the deleted note was being viewed, close the view/edit dialog
       if (noteToViewOrEdit && noteToViewOrEdit.id === noteIdToDelete) {
         setIsViewNoteDialogOpen(false);
         setNoteToViewOrEdit(null);
@@ -323,7 +383,6 @@ export function ChatPage() {
     setNotes(prevNotes => prevNotes.filter(n => n.folderId !== folderIdToDelete));
     setFolders(prevFolders => {
       const updatedFolders = prevFolders.filter(f => f.id !== folderIdToDelete);
-      // If the deleted folder was selected, select the first available folder or null
       if (selectedFolderId === folderIdToDelete) {
         setSelectedFolderId(updatedFolders.length > 0 ? updatedFolders[0].id : null);
       }
@@ -350,6 +409,80 @@ export function ChatPage() {
     });
   };
 
+  // Chat Session Management
+  const handleInitiateSaveChat = () => {
+    if (messages.length === 0) {
+      toast({ title: "Tidak Ada Pesan", description: "Tidak ada pesan untuk disimpan dalam obrolan ini.", variant: "destructive" });
+      return;
+    }
+    setChatSessionNameToSave(""); // Kosongkan nama obrolan awal
+    setIsSaveChatDialogOpen(true);
+  };
+
+  const handleConfirmSaveChat = () => {
+    if (!chatSessionNameToSave.trim()) {
+        toast({ title: "Nama Obrolan Kosong", description: "Nama sesi obrolan tidak boleh kosong.", variant: "destructive" });
+        return;
+    }
+    if (messages.length === 0) {
+      toast({ title: "Error", description: "Tidak ada pesan untuk disimpan.", variant: "destructive" });
+      return;
+    }
+    const finalChatName = chatSessionNameToSave.trim();
+    const newChatSession: ChatSession = {
+      id: crypto.randomUUID(),
+      name: finalChatName,
+      messages: [...messages], 
+      timestamp: new Date(),
+    };
+    setChatSessions(prev => [newChatSession, ...prev].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+    toast({ title: "Sukses", description: `Obrolan '${finalChatName}' berhasil disimpan.` });
+    setIsSaveChatDialogOpen(false);
+    setChatSessionNameToSave("");
+    handleStartNewChat(); // Start a new chat after saving
+  };
+
+  const handleLoadChatSession = (sessionId: string) => {
+    const sessionToLoad = chatSessions.find(s => s.id === sessionId);
+    if (sessionToLoad) {
+      setMessages([...sessionToLoad.messages]);
+      setCurrentChatTitle(sessionToLoad.name);
+      setActiveChatSessionId(sessionId);
+      setIsViewingSavedChat(true);
+      toast({ title: "Obrolan Dimuat", description: `Melihat riwayat '${sessionToLoad.name}'.` });
+    }
+  };
+
+  const handleStartNewChat = () => {
+    setMessages([]);
+    sessionStorage.removeItem(CURRENT_CHAT_SESSION_KEY); // Clear current chat from session storage
+    setCurrentChatTitle(null);
+    setActiveChatSessionId(null);
+    setIsViewingSavedChat(false);
+    if (isInitialLoadComplete) { // Avoid toast on initial load
+        toast({ title: "Obrolan Baru Dimulai" });
+    }
+  };
+
+  const handleInitiateDeleteChatSession = (sessionId: string) => {
+    setChatSessionIdToDelete(sessionId);
+    setIsDeleteChatSessionConfirmOpen(true);
+  };
+
+  const handleConfirmDeleteChatSession = () => {
+    if (chatSessionIdToDelete) {
+      const sessionName = chatSessions.find(s => s.id === chatSessionIdToDelete)?.name || "Obrolan";
+      setChatSessions(prev => prev.filter(s => s.id !== chatSessionIdToDelete));
+      toast({ title: "Obrolan Dihapus", description: `'${sessionName}' berhasil dihapus.`, variant: "destructive" });
+      
+      if (activeChatSessionId === chatSessionIdToDelete) {
+        handleStartNewChat(); 
+      }
+      setChatSessionIdToDelete(null);
+      setIsDeleteChatSessionConfirmOpen(false);
+    }
+  };
+
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -363,6 +496,11 @@ export function ChatPage() {
             onAddFolder={handleAddFolder}
             onViewNote={handleOpenViewNoteDialog}
             onInitiateDeleteFolder={handleInitiateDeleteFolder}
+            chatSessions={chatSessions}
+            onLoadChatSession={handleLoadChatSession}
+            onStartNewChat={handleStartNewChat}
+            onInitiateDeleteChatSession={handleInitiateDeleteChatSession}
+            activeChatSessionId={activeChatSessionId}
           />
         </UiSidebarContent>
       </Sidebar>
@@ -376,19 +514,30 @@ export function ChatPage() {
             backgroundRepeat: 'no-repeat',
           }}
         >
-          <ChatHeader messages={messages} />
+          <ChatHeader
+            messages={messages}
+            onSaveChat={handleInitiateSaveChat}
+            currentChatTitle={currentChatTitle}
+            isViewingSavedChat={isViewingSavedChat}
+            onStartNewChat={handleStartNewChat}
+          />
           <ChatMessageList
             messages={messages}
             isLoadingAiResponse={isLoading}
             loadingText="Hibeur sedang berpikir..."
             onInitiateSaveNote={handleInitiateSaveNote}
             user={user}
+            isViewingSavedChat={isViewingSavedChat}
           />
-          <ChatInputArea onSendMessage={handleSendMessage} isLoading={isLoading} />
+          <ChatInputArea
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            isDisabled={isViewingSavedChat}
+          />
         </div>
       </SidebarInset>
 
-      {/* Save Note Dialog */}
+      {/* Dialog Simpan Catatan */}
       <Dialog open={isSaveNoteDialogOpen} onOpenChange={setIsSaveNoteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -405,6 +554,7 @@ export function ChatPage() {
                     value={noteNameToSave}
                     onChange={(e) => setNoteNameToSave(e.target.value)}
                     placeholder="Contoh: Ide Resep Nasi Goreng"
+                    autoFocus
                 />
             </div>
             {noteContentToSave && (
@@ -453,7 +603,39 @@ export function ChatPage() {
         </DialogContent>
       </Dialog>
 
-      {/* View/Edit Note Dialog */}
+      {/* Dialog Simpan Obrolan */}
+      <Dialog open={isSaveChatDialogOpen} onOpenChange={setIsSaveChatDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Simpan Riwayat Obrolan</DialogTitle>
+            <DialogDescription>
+              Beri nama untuk sesi obrolan ini sebelum menyimpannya.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-1">
+              <Label htmlFor="chatSessionName">Nama Sesi Obrolan</Label>
+              <Input
+                id="chatSessionName"
+                value={chatSessionNameToSave}
+                onChange={(e) => setChatSessionNameToSave(e.target.value)}
+                placeholder="Contoh: Diskusi Proyek A"
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Batal</Button>
+            </DialogClose>
+            <Button type="button" onClick={handleConfirmSaveChat} disabled={!chatSessionNameToSave.trim()}>
+              Simpan Obrolan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Lihat/Edit Catatan */}
       {noteToViewOrEdit && (
         <Dialog open={isViewNoteDialogOpen} onOpenChange={(isOpen) => {
           setIsViewNoteDialogOpen(isOpen);
@@ -528,7 +710,7 @@ export function ChatPage() {
         </Dialog>
       )}
 
-      {/* Delete Note Confirmation Dialog */}
+      {/* AlertDialog Konfirmasi Hapus Catatan */}
       <AlertDialog open={isDeleteNoteConfirmOpen} onOpenChange={setIsDeleteNoteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -544,7 +726,7 @@ export function ChatPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Folder Confirmation Dialog */}
+      {/* AlertDialog Konfirmasi Hapus Folder */}
       <AlertDialog open={isDeleteFolderConfirmOpen} onOpenChange={setIsDeleteFolderConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -560,7 +742,23 @@ export function ChatPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* AlertDialog Konfirmasi Hapus Sesi Obrolan */}
+      <AlertDialog open={isDeleteChatSessionConfirmOpen} onOpenChange={setIsDeleteChatSessionConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Hapus Riwayat Obrolan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus sesi obrolan '{chatSessions.find(s => s.id === chatSessionIdToDelete)?.name || ''}'? Tindakan ini tidak dapat diurungkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setChatSessionIdToDelete(null)}>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDeleteChatSession} className="bg-destructive hover:bg-destructive/90">Hapus Riwayat</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </SidebarProvider>
   );
 }
-

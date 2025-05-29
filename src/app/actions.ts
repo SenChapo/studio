@@ -1,11 +1,13 @@
+
 'use server';
 
 import { enhanceQueryWithExternalKnowledge } from '@/ai/flows/enhance-query-with-external-knowledge';
 import { generateTextResponse } from '@/ai/flows/generate-text';
+import { summarizeImage } from '@/ai/flows/summarize-image-flow';
 import { z } from 'zod';
 
 const GetAiResponseInputSchema = z.object({
-  prompt: z.string().min(1, 'Prompt cannot be empty.'),
+  prompt: z.string().min(1, 'Prompt tidak boleh kosong.'),
 });
 
 export type GetAiResponseInput = z.infer<typeof GetAiResponseInputSchema>;
@@ -25,9 +27,6 @@ export async function getAiResponse(input: GetAiResponseInput): Promise<GetAiRes
 
   try {
     // Step 1: Enhance query if needed
-    // For simplicity, we'll assume the enhanceQueryWithExternalKnowledge flow internally decides
-    // whether to actually enhance or return the original.
-    // If it errors or returns an empty enhancedQuery, we might fall back to the original prompt.
     let queryToUse = prompt;
     try {
       const enhancementResult = await enhanceQueryWithExternalKnowledge({ query: prompt });
@@ -35,8 +34,7 @@ export async function getAiResponse(input: GetAiResponseInput): Promise<GetAiRes
         queryToUse = enhancementResult.enhancedQuery;
       }
     } catch (enhancementError) {
-      console.warn('Error enhancing query, using original prompt:', enhancementError);
-      // Fallback to original prompt is already default
+      console.warn('Kesalahan saat meningkatkan kueri, menggunakan prompt asli:', enhancementError);
     }
     
     // Step 2: Generate text response using the (potentially enhanced) query
@@ -45,13 +43,57 @@ export async function getAiResponse(input: GetAiResponseInput): Promise<GetAiRes
     if (response.text) {
       return { text: response.text };
     } else {
-      return { error: 'AI did not return a text response.' };
+      return { error: 'AI tidak memberikan respons teks.' };
     }
   } catch (error) {
-    console.error('Error getting AI response:', error);
+    console.error('Kesalahan mendapatkan respons AI:', error);
     if (error instanceof Error) {
       return { error: error.message };
     }
-    return { error: 'An unknown error occurred while fetching the AI response.' };
+    return { error: 'Terjadi kesalahan yang tidak diketahui saat mengambil respons AI.' };
+  }
+}
+
+
+const GetImageSummaryInputSchema = z.object({
+  imageDataUri: z.string().refine(val => val.startsWith('data:image/'), {
+    message: "Format URI data gambar tidak valid. Harus dimulai dengan 'data:image/'."
+  }),
+  userPrompt: z.string().min(1, "Prompt pengguna tidak boleh kosong."),
+});
+
+export type GetImageSummaryInput = z.infer<typeof GetImageSummaryInputSchema>;
+
+export interface GetImageSummaryOutput {
+  summary?: string;
+  error?: string;
+}
+
+export async function getImageSummaryAction(input: GetImageSummaryInput): Promise<GetImageSummaryOutput> {
+  const validatedInput = GetImageSummaryInputSchema.safeParse(input);
+  if (!validatedInput.success) {
+    return { error: validatedInput.error.errors.map(e => e.message).join(', ') };
+  }
+
+  const { imageDataUri, userPrompt } = validatedInput.data;
+
+  try {
+    const result = await summarizeImage({
+      imageDataUri: imageDataUri,
+      userPrompt: userPrompt, 
+    });
+    return { summary: result.summary };
+  } catch (error) {
+    console.error('Kesalahan mendapatkan ringkasan gambar:', error);
+    if (error instanceof Error) {
+      if (error.message.includes("model is overloaded")) {
+        return { error: "Model AI saat ini kelebihan beban. Silakan coba lagi dalam beberapa saat." };
+      }
+      if (error.message.includes("Invalid argument")) {
+        return { error: "Terjadi masalah saat memproses gambar. Pastikan format gambar valid dan ukurannya tidak terlalu besar." };
+      }
+      return { error: `Terjadi kesalahan: ${error.message}` };
+    }
+    return { error: 'Terjadi kesalahan yang tidak diketahui saat meringkas gambar.' };
   }
 }

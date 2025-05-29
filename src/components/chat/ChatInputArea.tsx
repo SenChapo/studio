@@ -2,22 +2,24 @@
 'use client';
 
 import { useState, type FormEvent, useRef, useEffect } from "react";
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Image as ImageIcon } from "lucide-react";
 
 interface ChatInputAreaProps {
   onSendMessage: (message: string) => Promise<void>;
   isLoading: boolean;
+  isDisabled?: boolean;
 }
 
-export function ChatInputArea({ onSendMessage, isLoading }: ChatInputAreaProps) {
+export function ChatInputArea({ onSendMessage, isLoading, isDisabled }: ChatInputAreaProps) {
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (inputValue.trim() && !isLoading) {
+    if (inputValue.trim() && !isLoading && !isDisabled) {
       await onSendMessage(inputValue.trim());
       setInputValue("");
       textareaRef.current?.focus();
@@ -25,19 +27,24 @@ export function ChatInputArea({ onSendMessage, isLoading }: ChatInputAreaProps) 
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !isDisabled) {
       e.preventDefault();
-      handleSubmit(e as unknown as FormEvent<HTMLFormElement>); // Simulate form submission
+      handleSubmit(e as unknown as FormEvent<HTMLFormElement>);
     }
   };
   
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'; // Reset height
+      textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [inputValue]);
+
+  useEffect(() => {
+    if (isDisabled) {
+      setInputValue(""); // Clear input when disabled (e.g., viewing saved chat)
+    }
+  }, [isDisabled]);
 
 
   return (
@@ -50,13 +57,18 @@ export function ChatInputArea({ onSendMessage, isLoading }: ChatInputAreaProps) 
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Tanya Hibeur AI..."
+        placeholder={isDisabled ? "Melihat riwayat obrolan. Mulai obrolan baru untuk mengirim pesan." : "Tanya Hibeur AI..."}
         className="flex-grow resize-none max-h-40 min-h-[40px] text-base"
         rows={1}
-        disabled={isLoading}
+        disabled={isLoading || isDisabled}
         aria-label="Input obrolan"
       />
-      <Button type="submit" size="icon" disabled={isLoading || !inputValue.trim()} aria-label="Kirim pesan">
+      <Link href="/summarize-image" passHref legacyBehavior>
+        <Button asChild variant="outline" size="icon" aria-label="Ringkas Gambar" className="shrink-0" disabled={isDisabled}>
+          <a><ImageIcon className="h-5 w-5" /></a>
+        </Button>
+      </Link>
+      <Button type="submit" size="icon" disabled={isLoading || !inputValue.trim() || isDisabled} aria-label="Kirim pesan" className="shrink-0">
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
