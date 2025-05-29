@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogOut, Settings, UserCircle, PanelLeft, Save, MessageSquarePlus } from "lucide-react";
-import { HibeurLogo } from "@/components/icons/CunenkLogo";
+import { HibeurLogo } from "@/components/icons/CunenkLogo"; // Corrected import path
 import type { ChatMessage } from "@/lib/chat-export";
 import { useMockAuth } from "@/hooks/useMockAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -112,11 +112,7 @@ export function ChatHeader({ messages, onSaveChat, currentChatTitle, isViewingSa
              <PanelLeft className="h-5 w-5"/>
           </SidebarTrigger>
           <HibeurLogo />
-           {currentChatTitle && (
-            <span className="text-sm text-muted-foreground truncate max-w-xs ml-2">
-              | {currentChatTitle}
-            </span>
-          )}
+          {/* The currentChatTitle display was here and is now removed */}
         </div>
         <div className="flex items-center space-x-2">
           {isViewingSavedChat ? (
