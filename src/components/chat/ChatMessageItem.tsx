@@ -25,7 +25,8 @@ const CodeBlock = ({ codeContent }: { codeContent: string }) => {
 
 export function ChatMessageItem({ message, onInitiateSaveNote, user }: ChatMessageItemProps) {
   const isUser = message.role === "user";
-  
+  const botAvatarUrl = "https://i.imgur.com/Zytm8Lw.jpeg"; // Updated bot avatar URL
+
   const parts = message.content.split(/(```(?:[\w-]+)?\n[\s\S]*?\n```)/g).filter(part => part.trim() !== '');
 
   return (
@@ -37,6 +38,7 @@ export function ChatMessageItem({ message, onInitiateSaveNote, user }: ChatMessa
     >
       {!isUser && (
         <Avatar className="h-8 w-8 shrink-0 border">
+          <AvatarImage src={botAvatarUrl} alt="Hibeur AI Avatar" data-ai-hint="bot avatar" />
           <AvatarFallback><Bot className="h-5 w-5 text-muted-foreground" /></AvatarFallback>
         </Avatar>
       )}
@@ -65,9 +67,9 @@ export function ChatMessageItem({ message, onInitiateSaveNote, user }: ChatMessa
             {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
           {!isUser && onInitiateSaveNote && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="p-1 h-auto text-xs text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/20" // Adjusted for contrast on gradient
               onClick={() => onInitiateSaveNote(message.content)}
               title="Simpan ke Catatan"

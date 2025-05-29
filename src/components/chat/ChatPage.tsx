@@ -50,8 +50,8 @@ import { FormattedTextRenderer } from '@/components/shared/FormattedTextRenderer
 import { useMockAuth } from "@/hooks/useMockAuth";
 
 
-const FOLDERS_STORAGE_KEY = 'cunenkFolders';
-const NOTES_STORAGE_KEY = 'cunenkNotes';
+const FOLDERS_STORAGE_KEY = 'hibeurFolders';
+const NOTES_STORAGE_KEY = 'hibeurNotes';
 
 export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -367,7 +367,15 @@ export function ChatPage() {
         </UiSidebarContent>
       </Sidebar>
       <SidebarInset>
-        <div className="flex flex-col h-screen bg-background">
+        <div
+          className="flex flex-col h-screen"
+          style={{
+            backgroundImage: `url('https://i.imgur.com/Zytm8Lw.jpeg')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
           <ChatHeader messages={messages} />
           <ChatMessageList
             messages={messages}
@@ -555,3 +563,4 @@ export function ChatPage() {
     </SidebarProvider>
   );
 }
+

@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Download, LogIn, LogOut, Settings, UserCircle, FileText, FileJson, PanelLeft } from "lucide-react";
-import { CunenkLogo } from "@/components/icons/CunenkLogo"; // Updated import
+import { CunenkLogo as HibeurLogo } from "@/components/icons/CunenkLogo";
 import type { ChatMessage } from "@/lib/chat-export";
 import { exportChatAsTxt, exportChatAsJson } from "@/lib/chat-export";
 import { useMockAuth } from "@/hooks/useMockAuth";
@@ -57,9 +57,9 @@ export function ChatHeader({ messages }: ChatHeaderProps) {
       return;
     }
     if (format === "txt") {
-      exportChatAsTxt(messages, "id");
+      exportChatAsTxt(messages, "Hibeur Chat", "id");
     } else {
-      exportChatAsJson(messages, "id");
+      exportChatAsJson(messages, "Hibeur Chat", "id");
     }
     toast({
       title: "Ekspor Berhasil",
@@ -99,12 +99,12 @@ export function ChatHeader({ messages }: ChatHeaderProps) {
 
   return (
     <>
-      <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm">
+      <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm animate-fade-in-down">
         <div className="flex items-center gap-2">
-          <SidebarTrigger> {/* Removed md:hidden to make it always visible */}
+          <SidebarTrigger>
              <PanelLeft className="h-5 w-5"/>
           </SidebarTrigger>
-          <CunenkLogo />
+          <HibeurLogo />
         </div>
         <div className="flex items-center space-x-2">
           <DropdownMenu>

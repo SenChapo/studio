@@ -133,7 +133,7 @@ export function NotesSidebar({
             const isExpanded = expandedFolders[folder.id] ?? true; // Default to expanded
             
             return (
-              <SidebarMenuItem key={folder.id}>
+              <SidebarMenuItem key={folder.id} className="animate-fade-in">
                 <SidebarMenuButton
                   onClick={() => onSelectFolder(folder.id)}
                   isActive={isActive}
@@ -173,9 +173,9 @@ export function NotesSidebar({
                 </SidebarMenuAction>
                 
                  {isExpanded && notesInFolder.length > 0 && (
-                  <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
+                  <SidebarMenuSub className="group-data-[collapsible=icon]:hidden animate-fade-in">
                     {notesInFolder.map((note) => (
-                      <SidebarMenuSubItem key={note.id}>
+                      <SidebarMenuSubItem key={note.id} className="animate-fade-in">
                         <SidebarMenuSubButton
                           onClick={() => onViewNote(note.id)}
                           size="sm"
@@ -203,8 +203,9 @@ export function NotesSidebar({
       </ScrollArea>
       
       <UiSidebarFooter className="p-2 mt-auto border-t border-sidebar-border group-data-[collapsible=icon]:hidden sticky bottom-0 bg-sidebar z-10">
-        <p className="text-xs text-sidebar-foreground/50 text-center">Hibeur Notes v0.1</p>
+        <p className="text-xs text-sidebar-foreground/50 text-center">Hibeur Notes v0.2</p>
       </UiSidebarFooter>
     </div>
   );
 }
+

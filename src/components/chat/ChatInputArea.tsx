@@ -43,7 +43,7 @@ export function ChatInputArea({ onSendMessage, isLoading }: ChatInputAreaProps) 
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex items-start space-x-2 p-4 border-t bg-card"
+      className="flex items-start space-x-2 p-4 border-t bg-card animate-fade-in-up"
     >
       <Textarea
         ref={textareaRef}
